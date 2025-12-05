@@ -3,8 +3,6 @@
 import 'package:flutter/material.dart';
 import '../../../data/datasources/item_service.dart';
 import '../../../data/datasources/auth_service.dart';
-import '../../../data/datasources/user_service.dart';
-
 import '../../../data/models/item_model.dart';
 import '../home/home_screen.dart';
 
@@ -25,8 +23,6 @@ class AddListingScreen extends StatefulWidget {
 class _AddListingScreenState extends State<AddListingScreen> {
   final ItemService _itemService = ItemService();
   final AuthService _authService = AuthService();
-  final UserService _userService = UserService();
-//c
   
   String _selectedType = 'sell';
   String _selectedCategory = 'Games';
@@ -470,16 +466,10 @@ class _AddListingScreenState extends State<AddListingScreen> {
         return;
       }
 
-      // Get the real user from the database using email
-      final dbUser = await _userService.getUserByEmail(user.email!);
-
-      if (dbUser == null) {
-      _showSnackbar('User data not found in database.', isError: true);
-      setState(() => _isSubmitting = false);
-      return;
-    }
-
-      final userId = dbUser.userId!;
+      // Parse user ID - Supabase auth user IDs are UUIDs (strings)
+      // We need to get the database user ID from the users table
+      // For now, we'll use a placeholder - you should fetch the actual user ID from your users table
+      final userId = 1; // TODO: Get actual user ID from users table by email
 
       // Parse price
       int? price;
