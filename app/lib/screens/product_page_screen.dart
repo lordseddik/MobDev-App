@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'contact_seller_screen.dart';
+import '../models/item_model.dart';
 
 class Productpage extends StatelessWidget {
-  const Productpage({super.key});
+  final ItemModel item;
+  const Productpage({super.key, required this.item});
 
   @override
   Widget build(BuildContext context) {
@@ -16,9 +18,9 @@ class Productpage extends StatelessWidget {
           },
           icon: const Icon(Icons.arrow_back, color: Colors.white),
         ),
-        title: const Text(
-          "Vintage Nintendo Game Boy",
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          item.title,
+          style: const TextStyle(color: Colors.white),
         ),
       ),
 
@@ -29,11 +31,19 @@ class Productpage extends StatelessWidget {
               padding: const EdgeInsets.all(16.0),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.asset(
-                  'images/Game-Boy-FL.jpg',
-                  height: 300,
-                  fit: BoxFit.contain,
-                ),
+                child: item.imageUrl != null
+                    ? Image.network(
+                        item.imageUrl!,
+                        height: 300,
+                        fit: BoxFit.cover,
+                      )
+                    : Container(
+                        height: 300,
+                        color: Colors.grey[900],
+                        child: const Center(
+                          child: Icon(Icons.videogame_asset, color: Colors.white54, size: 48),
+                        ),
+                      ),
               ),
             ),
 
@@ -48,8 +58,8 @@ class Productpage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Vintage Nintendo Game Boy',
-                    style: TextStyle(
+                    item.title,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -57,13 +67,17 @@ class Productpage extends StatelessWidget {
                   ),
                   SizedBox(height: 4),
                   Text(
-                    'Excellent, minor scratches',
-                    style: TextStyle(color: Colors.grey),
+                    item.category ?? 'Uncategorized',
+                    style: const TextStyle(color: Colors.grey),
                   ),
                   SizedBox(height: 12),
                   Text(
-                    '\$120.00',
-                    style: TextStyle(
+                    item.type == 'trade'
+                        ? 'Trade'
+                        : item.type == 'rent'
+                            ? '\$${item.price ?? 0}/day'
+                            : '\$${item.price ?? 0}',
+                    style: const TextStyle(
                       color: Color(0xFF9C4DFF),
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -71,8 +85,8 @@ class Productpage extends StatelessWidget {
                   ),
                   SizedBox(height: 12),
                   Text(
-                    'Relive the nostalgia with this classic Game Boy Color. Fully functional, meticulously cleaned, and ready for your favorite retro adventures. Screen is bright, buttons are responsive, and battery compartment is clean. Comes with original box and a copy of Pokémon Yellow. A true collector’s item for retro gaming enthusiasts.',
-                    style: TextStyle(color: Colors.white70, height: 1.4),
+                    item.description ?? 'No description provided.',
+                    style: const TextStyle(color: Colors.white70, height: 1.4),
                   ),
                 ],
               ),

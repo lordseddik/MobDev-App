@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
+import '../models/item_model.dart';
+import '../services/item_service.dart';
 
 class EditItemScreen extends StatefulWidget {
-  final String? itemTitle;
-  final String? itemDescription;
-  final String? itemPrice;
-  final String? itemCategory;
-  final String? itemListingType;
+  final ItemModel item;
+  final void Function(ItemModel updated)? onItemUpdated;
 
   const EditItemScreen({
     super.key,
-    this.itemTitle,
-    this.itemDescription,
-    this.itemPrice,
-    this.itemCategory,
-    this.itemListingType,
+    required this.item,
+    this.onItemUpdated,
   });
 
   @override
@@ -21,6 +17,7 @@ class EditItemScreen extends StatefulWidget {
 }
 
 class _EditItemScreenState extends State<EditItemScreen> {
+  final ItemService _itemService = ItemService();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
@@ -31,11 +28,15 @@ class _EditItemScreenState extends State<EditItemScreen> {
   void initState() {
     super.initState();
     // Pre-fill with existing data if provided
-    _titleController.text = widget.itemTitle ?? '';
-    _descriptionController.text = widget.itemDescription ?? '';
-    _priceController.text = widget.itemPrice ?? '';
-    _selectedCategory = widget.itemCategory ?? 'Games';
-    _selectedListingType = widget.itemListingType ?? 'Sell'; // NEW
+    _titleController.text = widget.item.title;
+    _descriptionController.text = widget.item.description ?? '';
+    _priceController.text = widget.item.price?.toString() ?? '';
+    _selectedCategory = widget.item.category ?? 'Games';
+    _selectedListingType = (widget.item.type ?? 'sell').toLowerCase() == 'rent'
+        ? 'Rent'
+        : (widget.item.type ?? 'sell').toLowerCase() == 'trade'
+            ? 'Trade'
+            : 'Sell';
   }
 
   @override
@@ -340,9 +341,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed: () {
-                  _saveChanges();
-                },
+                onPressed: _saveChanges,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF9C4DFF),
                   foregroundColor: Colors.white,
@@ -398,70 +397,78 @@ class _EditItemScreenState extends State<EditItemScreen> {
     );
   }
 
-  void _saveChanges() {
-    if (_titleController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a title')),
+  Future<void> _saveChanges() async {
+    final updates = <String, dynamic>{
+      'title': _titleController.text.trim(),
+      'description': _descriptionController.text.trim(),
+      'category': _selectedCategory,
+      'type': _selectedListingType.toLowerCase(),
+      'price': int.tryParse(_priceController.text.trim()),
+    };
+
+    // Remove nulls to avoid overwriting
+    updates.removeWhere((key, value) => value == null);
+
+    final ok = await _itemService.updateItem(widget.item.itemId!, updates);
+    if (ok) {
+      final updated = ItemModel(
+        itemId: widget.item.itemId,
+        imageUrl: widget.item.imageUrl,
+        title: updates['title'] ?? widget.item.title,
+        description: updates['description'] ?? widget.item.description,
+        type: updates['type'] ?? widget.item.type,
+        category: updates['category'] ?? widget.item.category,
+        platform: widget.item.platform,
+        price: updates['price'] ?? widget.item.price,
+        userId: widget.item.userId,
+        status: widget.item.status,
+        dateCreated: widget.item.dateCreated,
       );
-      return;
+
+      widget.onItemUpdated?.call(updated);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Item updated')),
+      );
+      Navigator.pop(context, updated);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to update item')),
+      );
     }
-
-    // Show what was saved
-    print('Saved Item:');
-    print('Title: ${_titleController.text}');
-    print('Description: ${_descriptionController.text}');
-    print('Category: $_selectedCategory');
-    print('Price: \$${_priceController.text}');
-    print('Listing Type: $_selectedListingType');
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Item updated successfully!')),
-    );
-
-    // Navigate back after saving
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      Navigator.pop(context);
-    });
   }
 
   void _showDeleteConfirmation() {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title: const Text(
-          'Delete Item',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: const Text(
-          'Are you sure you want to delete this item? This action cannot be undone.',
-          style: TextStyle(color: Colors.grey),
-        ),
+        title: const Text('Delete Item'),
+        content: const Text('Are you sure you want to delete this item?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Colors.grey),
-            ),
+            child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Item deleted successfully!')),
-              );
-              Future.delayed(const Duration(milliseconds: 1500), () {
-                Navigator.pop(context);
-              });
+              final ok = await _itemService.deleteItem(widget.item.itemId!);
+              if (ok) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Item deleted')),
+                );
+                Navigator.pop(context, true);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Failed to delete item')),
+                );
+              }
             },
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
-            ),
             child: const Text('Delete'),
           ),
         ],
       ),
     );
   }
+
+  
 }

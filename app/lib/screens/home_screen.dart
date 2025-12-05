@@ -5,9 +5,10 @@ import '../models/item_model.dart';
 import '../services/item_service.dart';
 import '../services/auth_service.dart';
 import '../services/favorite_service.dart';
-import 'product_page.dart';
+import 'product_page_screen.dart';
 import 'add_listing_screen.dart';
 import 'profile_screen.dart';
+import 'edit_item_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -311,7 +312,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => DetailsPage(item: item),
+            builder: (_) => Productpage(item: item),
           ),
         ).then((_) => _loadItems()); // Reload after returning
       },
@@ -347,7 +348,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         _buildTypeBadge(item.type ?? 'sell'),
-                        _buildFavoriteButton(item.itemId!),
+                        Row(children: [
+                          _buildFavoriteButton(item.itemId!),
+                          const SizedBox(width: 8),
+                          if (_isOwner(item)) _buildEditButton(item),
+                        ]),
                       ],
                     ),
                   ],
@@ -355,6 +360,50 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  bool _isOwner(ItemModel item) {
+    // Attempt to compare current auth user id (string/uuid) with item.userId (int)
+    final currentUserId = int.tryParse(_authService.getUserId() ?? '');
+    return currentUserId != null && currentUserId == item.userId;
+  }
+
+  Widget _buildEditButton(ItemModel item) {
+    return GestureDetector(
+      onTap: () async {
+        // Navigate to edit screen and refresh on return
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => EditItemScreen(
+              item: item,
+              onItemUpdated: (updated) {
+                // Update local list quickly
+                final idx = _allItems.indexWhere((it) => it.itemId == updated.itemId);
+                if (idx != -1) {
+                  _allItems[idx] = updated;
+                  _filterItems();
+                }
+              },
+            ),
+          ),
+        );
+        // Ensure server state fetched
+        _loadItems();
+      },
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.1),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(
+          Icons.edit,
+          color: Colors.white,
+          size: 18,
         ),
       ),
     );

@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
-import 'profile_screen.dart';
-// ...existing code...
+// FILE: lib/screens/add_listing_screen.dart
 
-import 'home_screen.dart'; // <-- add this (adjust path as needed)
-// ...existing code...
+import 'package:flutter/material.dart';
+import '../services/item_service.dart';
+import '../services/auth_service.dart';
+import '../models/item_model.dart';
 
 class AddListingScreen extends StatefulWidget {
   const AddListingScreen({super.key});
@@ -13,11 +13,29 @@ class AddListingScreen extends StatefulWidget {
 }
 
 class _AddListingScreenState extends State<AddListingScreen> {
-  String _selectedType = 'Sell';
-  String _selectedCategory = 'Games'; // NEW: Category variable
+  final ItemService _itemService = ItemService();
+  final AuthService _authService = AuthService();
+  
+  String _selectedType = 'sell';
+  String _selectedCategory = 'Games';
+  
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
+  final TextEditingController _imageUrlController = TextEditingController();
+  final TextEditingController _platformController = TextEditingController();
+  
+  bool _isSubmitting = false;
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    _priceController.dispose();
+    _imageUrlController.dispose();
+    _platformController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +54,7 @@ class _AddListingScreenState extends State<AddListingScreen> {
         backgroundColor: Colors.black,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
+        automaticallyImplyLeading: false,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -54,7 +73,7 @@ class _AddListingScreenState extends State<AddListingScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Upload Image',
+                    'Image URL',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -62,25 +81,19 @@ class _AddListingScreenState extends State<AddListingScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Container(
-                    height: 120,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[800],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.add_photo_alternate, size: 40, color: Colors.grey),
-                          SizedBox(height: 8),
-                          Text(
-                            'Add Photo',
-                            style: TextStyle(color: Colors.grey, fontSize: 16),
-                          ),
-                        ],
+                  TextFormField(
+                    controller: _imageUrlController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'https://example.com/image.jpg',
+                      hintStyle: const TextStyle(color: Colors.white70),
+                      prefixIcon: const Icon(Icons.image, color: Colors.white),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
                       ),
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.2),
                     ),
                   ),
                 ],
@@ -160,12 +173,38 @@ class _AddListingScreenState extends State<AddListingScreen> {
                       fillColor: Colors.black,
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  
+                  // Platform Field (optional)
+                  const Text(
+                    'Platform (optional)',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _platformController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'e.g., PS5, Xbox, Nintendo Switch',
+                      hintStyle: const TextStyle(color: Colors.grey),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: Colors.black,
+                    ),
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 20),
 
-            // Category Section - NEW: Added this section
+            // Category Section
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -202,22 +241,11 @@ class _AddListingScreenState extends State<AddListingScreen> {
                         contentPadding: EdgeInsets.symmetric(horizontal: 16),
                       ),
                       items: const [
-                        DropdownMenuItem(
-                          value: 'Games',
-                          child: Text('Games'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'Consoles',
-                          child: Text('Consoles'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'Accessories',
-                          child: Text('Accessories'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'Other',
-                          child: Text('Other'),
-                        ),
+                        DropdownMenuItem(value: 'Games', child: Text('Games')),
+                        DropdownMenuItem(value: 'Consoles', child: Text('Consoles')),
+                        DropdownMenuItem(value: 'Accessories', child: Text('Accessories')),
+                        DropdownMenuItem(value: 'Electronics', child: Text('Electronics')),
+                        DropdownMenuItem(value: 'Other', child: Text('Other')),
                       ],
                       onChanged: (String? newValue) {
                         setState(() {
@@ -259,8 +287,8 @@ class _AddListingScreenState extends State<AddListingScreen> {
                     child: Row(
                       children: [
                         _buildTypeButton('Rent', 'rent'),
-                        _buildTypeButton('Trade', 'Trade'),
-                        _buildTypeButton('Sell', 'Sell'),
+                        _buildTypeButton('Trade', 'trade'),
+                        _buildTypeButton('Sell', 'sell'),
                       ],
                     ),
                   ),
@@ -280,20 +308,35 @@ class _AddListingScreenState extends State<AddListingScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Price',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                  Row(
+                    children: [
+                      const Text(
+                        'Price',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      if (_selectedType == 'trade')
+                        const Text(
+                          ' (Not required for trade)',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _priceController,
+                    enabled: _selectedType != 'trade',
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: 'e.g. 500',
+                      hintText: _selectedType == 'rent' 
+                          ? 'e.g. 10 (per day)' 
+                          : 'e.g. 500',
                       hintStyle: const TextStyle(color: Colors.grey),
                       prefixText: '\$ ',
                       prefixStyle: const TextStyle(color: Colors.white),
@@ -302,7 +345,9 @@ class _AddListingScreenState extends State<AddListingScreen> {
                         borderSide: BorderSide.none,
                       ),
                       filled: true,
-                      fillColor: Colors.black,
+                      fillColor: _selectedType == 'trade' 
+                          ? Colors.grey[800] 
+                          : Colors.black,
                     ),
                     keyboardType: TextInputType.number,
                   ),
@@ -316,75 +361,33 @@ class _AddListingScreenState extends State<AddListingScreen> {
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed: () {
-                  if (_titleController.text.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please enter a title')),
-                    );
-                    return;
-                  }
-                  
-                  // Show what was submitted
-                  print('Submitted Listing:');
-                  print('Title: ${_titleController.text}');
-                  print('Description: ${_descriptionController.text}');
-                  print('Category: $_selectedCategory');
-                  print('Listing Type: $_selectedType');
-                  print('Price: \$${_priceController.text}');
-                  
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Listing submitted successfully!')),
-                  );
-                },
+                onPressed: _isSubmitting ? null : _submitListing,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF9C4DFF),
+                  disabledBackgroundColor: const Color(0xFF9C4DFF).withOpacity(0.5),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text(
-                  'Submit Listing',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
+                child: _isSubmitting
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        'Submit Listing',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
               ),
             ),
+            const SizedBox(height: 20),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.black,
-        currentIndex: 1,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF9C4DFF),
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle_outline),
-            label: 'Add',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outlined),
-            label: 'Profile',
-          ),
-        ],
-        onTap: (index) {
-          if (index == 0) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const HomeScreen()),
-            );
-          } else if (index == 2) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const ProfileScreen()),
-            );
-          }
-        },
       ),
     );
   }
@@ -402,6 +405,10 @@ class _AddListingScreenState extends State<AddListingScreen> {
           onPressed: () {
             setState(() {
               _selectedType = value;
+              // Clear price if trade is selected
+              if (value == 'trade') {
+                _priceController.clear();
+              }
             });
           },
           style: TextButton.styleFrom(
@@ -419,6 +426,107 @@ class _AddListingScreenState extends State<AddListingScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Future<void> _submitListing() async {
+    // Validation
+    if (_titleController.text.trim().isEmpty) {
+      _showSnackbar('Please enter a title', isError: true);
+      return;
+    }
+
+    if (_selectedType != 'trade' && _priceController.text.trim().isEmpty) {
+      _showSnackbar('Please enter a price', isError: true);
+      return;
+    }
+
+    if (_descriptionController.text.trim().isEmpty) {
+      _showSnackbar('Please enter a description', isError: true);
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      // Get current user ID from auth
+      final user = _authService.getCurrentUser();
+      if (user == null) {
+        _showSnackbar('You must be logged in to create a listing', isError: true);
+        setState(() => _isSubmitting = false);
+        return;
+      }
+
+      // Parse user ID - Supabase auth user IDs are UUIDs (strings)
+      // We need to get the database user ID from the users table
+      // For now, we'll use a placeholder - you should fetch the actual user ID from your users table
+      final userId = 1; // TODO: Get actual user ID from users table by email
+
+      // Parse price
+      int? price;
+      if (_selectedType != 'trade') {
+        price = int.tryParse(_priceController.text.trim());
+        if (price == null) {
+          _showSnackbar('Please enter a valid price', isError: true);
+          setState(() => _isSubmitting = false);
+          return;
+        }
+      }
+
+      // Build ItemModel
+      final newItem = ItemModel(
+        title: _titleController.text.trim(),
+        description: _descriptionController.text.trim(),
+        category: _selectedCategory,
+        type: _selectedType,
+        price: price,
+        userId: userId,
+        status: true,
+        imageUrl: _imageUrlController.text.trim().isEmpty 
+            ? null 
+            : _imageUrlController.text.trim(),
+        platform: _platformController.text.trim().isEmpty 
+            ? null 
+            : _platformController.text.trim(),
+      );
+
+      // Call service to create item
+      final created = await _itemService.createItem(newItem);
+
+      if (created != null) {
+        _showSnackbar('Listing created successfully!', isError: false);
+        
+        // Clear form
+        _titleController.clear();
+        _descriptionController.clear();
+        _priceController.clear();
+        _imageUrlController.clear();
+        _platformController.clear();
+        
+        // Navigate back after a short delay
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted) {
+          Navigator.pop(context, created);
+        }
+      } else {
+        _showSnackbar('Failed to create listing. Please try again.', isError: true);
+      }
+    } catch (e) {
+      _showSnackbar('Error: ${e.toString()}', isError: true);
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  void _showSnackbar(String message, {required bool isError}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red : Colors.green,
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }

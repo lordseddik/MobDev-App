@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'add_listing_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -356,37 +355,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.black,
-        currentIndex: 2,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Color(0xFF9C4DFF), // NEW PURPLE
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle_outline),
-            label: 'Add',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outlined),
-            label: 'Profile',
-          ),
-        ],
-        onTap: (index) {
-          if (index == 1) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const AddListingScreen()),
-            );
-          } else if (index == 0) {
-            Navigator.pop(context);
-          }
-        },
       ),
     );
   }
