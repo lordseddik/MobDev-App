@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'item/add_listing_screen.dart';
 import 'profile_screen.dart';
+import 'home/home_screen.dart';
 import '../../data/models/user_model.dart';
 import '../../data/datasources/user_service.dart';
 import '../../core/constants/app_colors.dart';
@@ -128,7 +129,12 @@ class _ContactSellerScreenState extends State<ContactSellerScreen> {
           ),
         ],
         onTap: (index) {
-          if (index == 1) {
+          if (index == 0) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const HomeScreen()),
+            );
+          } else if (index == 1) {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
@@ -144,7 +150,6 @@ class _ContactSellerScreenState extends State<ContactSellerScreen> {
               MaterialPageRoute(builder: (context) => const ProfileScreen()),
             );
           }
-          // Index 0 (Home) stays on current page or you can add HomeScreen navigation
         },
       ),
     );
