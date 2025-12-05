@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'screens/home_screen.dart'; // Add this import
 
 
 void main() async {
@@ -13,16 +14,21 @@ void main() async {
       anonKey:  dotenv.env['SUPABASE_ANON_KEY']!
   );
 
-
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: Text("Hello world"),); 
+    return MaterialApp(
+      title: 'Marketplace App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        useMaterial3: true,
+      ),
+      home: const HomeScreen(), // Changed this line
+    );
   }
 }
