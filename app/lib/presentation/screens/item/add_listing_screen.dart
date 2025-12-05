@@ -1,12 +1,20 @@
 // FILE: lib/screens/add_listing_screen.dart
 
 import 'package:flutter/material.dart';
-import '../services/item_service.dart';
-import '../services/auth_service.dart';
-import '../models/item_model.dart';
+import '../../../data/datasources/item_service.dart';
+import '../../../data/datasources/auth_service.dart';
+import '../../../data/models/item_model.dart';
+import '../home/home_screen.dart';
 
 class AddListingScreen extends StatefulWidget {
-  const AddListingScreen({super.key});
+  final Function(ItemModel) onItemCreated; // callback to parent when item created
+  final bool redirectToHome; // when true, navigate to HomeScreen after creation
+
+  const AddListingScreen({
+    super.key,
+    required this.onItemCreated,
+    this.redirectToHome = false,
+  });
 
   @override
   State<AddListingScreen> createState() => _AddListingScreenState();
@@ -495,19 +503,38 @@ class _AddListingScreenState extends State<AddListingScreen> {
       final created = await _itemService.createItem(newItem);
 
       if (created != null) {
+        // Inform parent via callback so embedded usages (like HomeScreen tab)
+        // can update their lists immediately.
+        try {
+          widget.onItemCreated(created);
+        } catch (_) {}
+
         _showSnackbar('Listing created successfully!', isError: false);
-        
+
         // Clear form
         _titleController.clear();
         _descriptionController.clear();
         _priceController.clear();
         _imageUrlController.clear();
         _platformController.clear();
-        
-        // Navigate back after a short delay
+
+        // Navigate appropriately after a short delay
         await Future.delayed(const Duration(milliseconds: 500));
         if (mounted) {
-          Navigator.pop(context, created);
+          if (widget.redirectToHome) {
+            // If requested, navigate to HomeScreen and clear stack
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const HomeScreen()),
+              (route) => false,
+            );
+          } else {
+            // If this screen was presented as a route, pop it returning the created item.
+            // If it's embedded (e.g., used as a tab), the parent callback will handle UI changes
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context, created);
+            }
+          }
         }
       } else {
         _showSnackbar('Failed to create listing. Please try again.', isError: true);

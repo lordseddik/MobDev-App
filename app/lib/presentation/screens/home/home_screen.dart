@@ -1,14 +1,15 @@
-// FILE: lib/screens/home_screen.dart
+// FILE: lib/presentation/screens/home/home_screen.dart
 
 import 'package:flutter/material.dart';
-import '../models/item_model.dart';
-import '../services/item_service.dart';
-import '../services/auth_service.dart';
-import '../services/favorite_service.dart';
+import '../../../data/models/item_model.dart';
+import '../../../data/datasources/item_service.dart';
+import '../../../data/datasources/auth_service.dart';
+import '../../../data/datasources/favorite_service.dart';
+import '../../../data/datasources/user_service.dart';
 import 'product_page_screen.dart';
-import 'add_listing_screen.dart';
-import 'profile_screen.dart';
-import 'edit_item_screen.dart';
+import '../item/add_listing_screen.dart';
+import '../profile_screen.dart';
+import '../item/edit_item_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final ItemService _itemService = ItemService();
   final AuthService _authService = AuthService();
   final FavoriteService _favoriteService = FavoriteService();
+  final UserService _userService = UserService();
   
   int _currentIndex = 0;
   int _activeCategoryIndex = 0;
@@ -28,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<ItemModel> _allItems = [];
   List<ItemModel> _displayedItems = [];
   bool _isLoading = true;
+  int? _currentUserId;
   
   final TextEditingController _searchController = TextEditingController();
   
@@ -42,6 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _initializeUser();
     _loadItems();
   }
 
@@ -49,6 +53,22 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _initializeUser() async {
+    try {
+      final authUser = _authService.getCurrentUser();
+      if (authUser != null) {
+        final dbUser = await _userService.getUserByEmail(authUser.email!);
+        if (dbUser != null) {
+          setState(() {
+            _currentUserId = dbUser.userId;
+          });
+        }
+      }
+    } catch (e) {
+      print('Error getting user ID: $e');
+    }
   }
 
   Future<void> _loadItems() async {
@@ -59,8 +79,18 @@ class _HomeScreenState extends State<HomeScreen> {
       _filterItems();
     } catch (e) {
       print('Error loading items: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading items: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -99,47 +129,93 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _toggleFavorite(int itemId) async {
-    final userId = int.tryParse(_authService.getUserId() ?? '0') ?? 1;
-    await _favoriteService.toggleFavorite(userId, itemId);
-    
-    // Show feedback
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Favorite updated'),
-        duration: Duration(seconds: 1),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    if (_currentUserId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please log in to add favorites'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    try {
+      await _favoriteService.toggleFavorite(_currentUserId!, itemId);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Favorite updated'),
+            duration: Duration(seconds: 1),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error toggling favorite: $e');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: _currentIndex == 0 
-          ? _buildHomeContent() 
-          : _currentIndex == 1
-              ? AddListingScreen()
-              : ProfileScreen(),
+      body: _buildCurrentScreen(),
       bottomNavigationBar: _buildBottomNavBar(),
     );
   }
 
+  Widget _buildCurrentScreen() {
+    switch (_currentIndex) {
+      case 0:
+        return _buildHomeContent();
+      case 1:
+        return AddListingScreen(
+          onItemCreated: (newItem) {
+            // Add new item to list immediately
+            setState(() {
+              _allItems.insert(0, newItem);
+              _filterItems();
+            });
+            // Switch back to home tab
+            setState(() => _currentIndex = 0);
+            // Show success message
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Listing created successfully!'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          },
+        );
+      case 2:
+        return const ProfileScreen(); // This now shows the profile view with tabs
+      default:
+        return _buildHomeContent();
+    }
+  }
+
   Widget _buildHomeContent() {
     return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          const SizedBox(height: 10),
-          _buildHeader(),
-          const SizedBox(height: 20),
-          _buildSearchField(),
-          const SizedBox(height: 20),
-          _buildCategoryRow(),
-          const SizedBox(height: 25),
-          _isLoading ? _buildLoadingGrid() : _buildItemsGrid(),
-          const SizedBox(height: 80),
-        ],
+      child: RefreshIndicator(
+        onRefresh: _loadItems,
+        color: const Color(0xFF9C4DFF),
+        backgroundColor: Colors.black,
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            const SizedBox(height: 10),
+            _buildHeader(),
+            const SizedBox(height: 20),
+            _buildSearchField(),
+            const SizedBox(height: 20),
+            _buildCategoryRow(),
+            const SizedBox(height: 25),
+            _isLoading ? _buildLoadingGrid() : _buildItemsGrid(),
+            const SizedBox(height: 80),
+          ],
+        ),
       ),
     );
   }
@@ -189,6 +265,14 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+          if (_searchController.text.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.clear, color: Colors.grey, size: 20),
+              onPressed: () {
+                _searchController.clear();
+                _searchItems('');
+              },
+            ),
         ],
       ),
     );
@@ -204,7 +288,10 @@ class _HomeScreenState extends State<HomeScreen> {
           final isActive = _activeCategoryIndex == index;
           return GestureDetector(
             onTap: () {
-              setState(() => _activeCategoryIndex = index);
+              setState(() {
+                _activeCategoryIndex = index;
+                _searchController.clear();
+              });
               _filterItems();
             },
             child: Container(
@@ -314,7 +401,7 @@ class _HomeScreenState extends State<HomeScreen> {
           MaterialPageRoute(
             builder: (_) => Productpage(item: item),
           ),
-        ).then((_) => _loadItems()); // Reload after returning
+        ).then((_) => _loadItems());
       },
       child: Container(
         decoration: BoxDecoration(
@@ -348,11 +435,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         _buildTypeBadge(item.type ?? 'sell'),
-                        Row(children: [
-                          _buildFavoriteButton(item.itemId!),
-                          const SizedBox(width: 8),
-                          if (_isOwner(item)) _buildEditButton(item),
-                        ]),
+                        Row(
+                          children: [
+                            _buildFavoriteButton(item.itemId!),
+                            const SizedBox(width: 8),
+                            if (_isOwner(item)) _buildEditButton(item),
+                          ],
+                        ),
                       ],
                     ),
                   ],
@@ -366,33 +455,33 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   bool _isOwner(ItemModel item) {
-    // Attempt to compare current auth user id (string/uuid) with item.userId (int)
-    final currentUserId = int.tryParse(_authService.getUserId() ?? '');
-    return currentUserId != null && currentUserId == item.userId;
+    return _currentUserId != null && _currentUserId == item.userId;
   }
 
   Widget _buildEditButton(ItemModel item) {
     return GestureDetector(
       onTap: () async {
-        // Navigate to edit screen and refresh on return
-        await Navigator.push(
+        final result = await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => EditItemScreen(
               item: item,
               onItemUpdated: (updated) {
-                // Update local list quickly
                 final idx = _allItems.indexWhere((it) => it.itemId == updated.itemId);
                 if (idx != -1) {
-                  _allItems[idx] = updated;
-                  _filterItems();
+                  setState(() {
+                    _allItems[idx] = updated;
+                    _filterItems();
+                  });
                 }
               },
             ),
           ),
         );
-        // Ensure server state fetched
-        _loadItems();
+        
+        if (result != null) {
+          _loadItems();
+        }
       },
       child: Container(
         padding: const EdgeInsets.all(6),
@@ -416,11 +505,35 @@ class _HomeScreenState extends State<HomeScreen> {
           height: 140,
           decoration: BoxDecoration(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
-            image: DecorationImage(
-              image: NetworkImage(
-                item.imageUrl ?? 'https://via.placeholder.com/300',
-              ),
+            color: Colors.grey[800],
+          ),
+          child: ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+            child: Image.network(
+              item.imageUrl ?? 'https://via.placeholder.com/300',
               fit: BoxFit.cover,
+              width: double.infinity,
+              errorBuilder: (context, error, stackTrace) {
+                return Center(
+                  child: Icon(
+                    Icons.broken_image,
+                    size: 40,
+                    color: Colors.grey[600],
+                  ),
+                );
+              },
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Center(
+                  child: CircularProgressIndicator(
+                    value: loadingProgress.expectedTotalBytes != null
+                        ? loadingProgress.cumulativeBytesLoaded /
+                            loadingProgress.expectedTotalBytes!
+                        : null,
+                    color: const Color(0xFF9C4DFF),
+                  ),
+                );
+              },
             ),
           ),
         ),
@@ -429,7 +542,7 @@ class _HomeScreenState extends State<HomeScreen> {
             height: 140,
             decoration: BoxDecoration(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withOpacity(0.7),
             ),
             child: const Center(
               child: Text(
@@ -438,6 +551,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
+                  letterSpacing: 1.5,
                 ),
               ),
             ),

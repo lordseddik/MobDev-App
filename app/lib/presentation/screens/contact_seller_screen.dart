@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'add_listing_screen.dart';
+import 'item/add_listing_screen.dart';
 import 'profile_screen.dart';
 
 class ContactSellerScreen extends StatelessWidget {
@@ -235,7 +235,12 @@ class ContactSellerScreen extends StatelessWidget {
           if (index == 1) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const AddListingScreen()),
+              MaterialPageRoute(
+                builder: (context) => AddListingScreen(
+                  onItemCreated: (_) {},
+                  redirectToHome: true,
+                ),
+              ),
             );
           } else if (index == 2) {
             Navigator.pushReplacement(

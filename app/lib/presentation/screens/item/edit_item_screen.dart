@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/item_model.dart';
-import '../services/item_service.dart';
+import '../../../data/models/item_model.dart';
+import '../../../data/datasources/item_service.dart';
 
 class EditItemScreen extends StatefulWidget {
   final ItemModel item;
