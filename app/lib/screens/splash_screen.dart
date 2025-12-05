@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
+import '../core/constants/app_colors.dart';
+import '../core/widgets/custom_button.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -7,7 +9,7 @@ class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.background,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 30.0),
@@ -20,7 +22,7 @@ class SplashScreen extends StatelessWidget {
                   Text(
                     'Re',
                     style: TextStyle(
-                      color: Color(0xFF9C4DFF),
+                      color: AppColors.primary,
                       fontSize: 60,
                       fontWeight: FontWeight.bold,
                     ),
@@ -28,7 +30,7 @@ class SplashScreen extends StatelessWidget {
                   Text(
                     'Play',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                       fontSize: 60,
                       fontWeight: FontWeight.bold,
                     ),
@@ -36,7 +38,7 @@ class SplashScreen extends StatelessWidget {
                   SizedBox(width: 6),
                   Icon(
                     Icons.videogame_asset,
-                    color: Color(0xFF9C4DFF),
+                    color: AppColors.primary,
                     size: 36,
                   ),
                 ],
@@ -46,38 +48,23 @@ class SplashScreen extends StatelessWidget {
 
               const Text(
                 'Trade. Play. Repeat.',
-                style: TextStyle(color: Colors.white, fontSize: 25),
+                style: TextStyle(color: AppColors.textPrimary, fontSize: 25),
               ),
 
               const SizedBox(height: 40),
 
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const LoginScreen(),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF9C4DFF),
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
+              CustomButton(
+                text: 'Get Started',
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const LoginScreen(),
                     ),
-                  ),
-                  child: const Text(
-                    'Get Started',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
+                  );
+                },
+                fontSize: 18,
+                borderRadius: BorderRadius.circular(30),
               ),
             ],
           ),

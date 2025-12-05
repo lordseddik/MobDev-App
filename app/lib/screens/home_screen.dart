@@ -4,6 +4,9 @@ import '../models/item_model.dart';
 import '../services/user_service.dart';
 import '../services/item_service.dart';
 import '../services/favorite_service.dart';
+import '../core/constants/app_colors.dart';
+import '../core/constants/app_strings.dart';
+import '../core/widgets/loading_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -83,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // Example: Delete an item
   Future<void> _deleteItem(int itemId) async {
     final success = await _itemService.deleteItem(itemId);
-    
+
     if (success) {
       print('Item deleted');
       _loadItems(); // Refresh list
@@ -93,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // Example: Toggle favorite
   Future<void> _toggleFavorite(int userId, int itemId) async {
     final success = await _favoriteService.toggleFavorite(userId, itemId);
-    
+
     if (success) {
       print('Favorite toggled');
     }
@@ -109,11 +112,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Marketplace'),
-      ),
+      appBar: AppBar(title: const Text(AppStrings.marketplace)),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const LoadingWidget()
           : ListView.builder(
               itemCount: items.length,
               itemBuilder: (context, index) {

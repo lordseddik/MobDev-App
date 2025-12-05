@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'add_listing_screen.dart';
 import 'profile_screen.dart';
+import '../core/constants/app_colors.dart';
+import '../core/constants/app_strings.dart';
+import '../core/widgets/custom_button.dart';
 
 class ContactSellerScreen extends StatelessWidget {
   const ContactSellerScreen({super.key});
@@ -8,20 +11,20 @@ class ContactSellerScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
-          'Contact Seller',
+          AppStrings.contactSeller,
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 20,
-            color: Colors.white,
+            color: AppColors.textPrimary,
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.black,
+        backgroundColor: AppColors.background,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -38,7 +41,7 @@ class ContactSellerScreen extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey[900],
+                color: AppColors.cardBackground,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -49,12 +52,12 @@ class ContactSellerScreen extends StatelessWidget {
                     height: 60,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.grey[800],
+                      color: AppColors.inputBackground,
                     ),
                     child: const Icon(
                       Icons.person,
                       size: 40,
-                      color: Colors.grey,
+                      color: AppColors.textHint,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -68,7 +71,7 @@ class ContactSellerScreen extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -79,14 +82,14 @@ class ContactSellerScreen extends StatelessWidget {
                               height: 8,
                               decoration: const BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.green,
+                                color: AppColors.online,
                               ),
                             ),
                             const SizedBox(width: 8),
                             const Text(
-                              'Online',
+                              AppStrings.online,
                               style: TextStyle(
-                                color: Colors.green,
+                                color: AppColors.online,
                                 fontSize: 14,
                               ),
                             ),
@@ -105,18 +108,18 @@ class ContactSellerScreen extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey[900],
+                color: AppColors.cardBackground,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Contact Options',
+                    AppStrings.contactOptions,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -124,26 +127,29 @@ class ContactSellerScreen extends StatelessWidget {
                   // Phone Number Option
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.grey[800],
+                      color: AppColors.inputBackground,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: ListTile(
-                      leading: const Icon(Icons.phone, color: Colors.grey),
+                      leading: const Icon(
+                        Icons.phone,
+                        color: AppColors.textHint,
+                      ),
                       title: const Text(
-                        'Phone Number',
+                        AppStrings.phoneNumber,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppColors.textPrimary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       subtitle: const Text(
                         '+213 555555555',
-                        style: TextStyle(color: Colors.grey),
+                        style: TextStyle(color: AppColors.textHint),
                       ),
                       trailing: const Icon(
                         Icons.arrow_forward_ios,
                         size: 16,
-                        color: Colors.grey,
+                        color: AppColors.textHint,
                       ),
                       onTap: () {
                         // Phone call functionality
@@ -155,26 +161,29 @@ class ContactSellerScreen extends StatelessWidget {
                   // Email Address Option
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.grey[800],
+                      color: AppColors.inputBackground,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: ListTile(
-                      leading: const Icon(Icons.email, color: Colors.grey),
+                      leading: const Icon(
+                        Icons.email,
+                        color: AppColors.textHint,
+                      ),
                       title: const Text(
-                        'Email Address',
+                        AppStrings.emailAddress,
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppColors.textPrimary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       subtitle: const Text(
                         'emily.r@replayapp.com',
-                        style: TextStyle(color: Colors.grey),
+                        style: TextStyle(color: AppColors.textHint),
                       ),
                       trailing: const Icon(
                         Icons.arrow_forward_ios,
                         size: 16,
-                        color: Colors.grey,
+                        color: AppColors.textHint,
                       ),
                       onTap: () {
                         // Email functionality
@@ -187,48 +196,36 @@ class ContactSellerScreen extends StatelessWidget {
             const SizedBox(height: 20),
 
             // Message Seller Button
-            SizedBox(
-              width: double.infinity,
+            CustomButton(
+              text: AppStrings.messageSeller,
+              onPressed: () {
+                // Message seller functionality
+              },
               height: 50,
-              child: ElevatedButton(
-                onPressed: () {
-                  // Message seller functionality
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF9C4DFF),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text(
-                  'Message Seller',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
+              borderRadius: BorderRadius.circular(8),
             ),
           ],
         ),
       ),
       // Bottom Navigation Bar
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.black,
+        backgroundColor: AppColors.background,
         currentIndex: 0, // Home is selected (you can change this)
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF9C4DFF),
-        unselectedItemColor: Colors.grey,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.textHint,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
-            label: 'Home',
+            label: AppStrings.home,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.add_circle_outline),
-            label: 'Add',
+            label: AppStrings.add,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outlined),
-            label: 'Profile',
+            label: AppStrings.profile,
           ),
         ],
         onTap: (index) {

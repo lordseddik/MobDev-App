@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'profile_screen.dart';
+import '../core/constants/app_colors.dart';
+import '../core/constants/app_strings.dart';
+import '../core/widgets/custom_button.dart';
+import '../core/widgets/custom_textfield.dart';
+import '../core/utils/helpers.dart';
 
 class AddListingScreen extends StatefulWidget {
   const AddListingScreen({super.key});
@@ -17,20 +22,20 @@ class _AddListingScreenState extends State<AddListingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
-          'Add Listing',
+          AppStrings.addListing,
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 20,
-            color: Colors.white,
+            color: AppColors.textPrimary,
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.black,
+        backgroundColor: AppColors.background,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -42,18 +47,18 @@ class _AddListingScreenState extends State<AddListingScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Color(0xFF9C4DFF), // NEW PURPLE
+                color: AppColors.primary,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Upload Image',
+                    AppStrings.uploadImage,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -92,71 +97,54 @@ class _AddListingScreenState extends State<AddListingScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey[900],
+                color: AppColors.cardBackground,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Item Details',
+                    AppStrings.itemDetails,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 16),
 
                   const Text(
-                    'Title',
+                    AppStrings.title,
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  TextFormField(
+                  CustomTextField(
                     controller: _titleController,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: 'e.g., God of War Ragnarök (PS5)',
-                      hintStyle: const TextStyle(color: Colors.grey),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: Colors.black,
-                    ),
+                    hintText: AppStrings.titlePlaceholder,
+                    borderRadius: 8,
+                    fillColor: AppColors.background,
                   ),
                   const SizedBox(height: 16),
 
                   const Text(
-                    'Description',
+                    AppStrings.description,
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  TextFormField(
+                  CustomTextField(
                     controller: _descriptionController,
+                    hintText: AppStrings.descriptionPlaceholder,
                     maxLines: 4,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText:
-                          'Describe your item, including condition, version, and any extras.',
-                      hintStyle: const TextStyle(color: Colors.grey),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: Colors.black,
-                    ),
+                    borderRadius: 8,
+                    fillColor: AppColors.background,
                   ),
                 ],
               ),
@@ -168,18 +156,18 @@ class _AddListingScreenState extends State<AddListingScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey[900],
+                color: AppColors.cardBackground,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Listing Type',
+                    AppStrings.listingType,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -206,37 +194,27 @@ class _AddListingScreenState extends State<AddListingScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey[900],
+                color: AppColors.cardBackground,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Price',
+                    AppStrings.price,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  TextFormField(
+                  CustomTextField(
                     controller: _priceController,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: 'e.g. 500',
-                      hintStyle: const TextStyle(color: Colors.grey),
-                      prefixText: '\$ ',
-                      prefixStyle: const TextStyle(color: Colors.white),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: Colors.black,
-                    ),
+                    hintText: AppStrings.pricePlaceholder,
                     keyboardType: TextInputType.number,
+                    borderRadius: 8,
+                    fillColor: AppColors.background,
                   ),
                 ],
               ),
@@ -244,57 +222,45 @@ class _AddListingScreenState extends State<AddListingScreen> {
             const SizedBox(height: 30),
 
             // Submit Listing Button
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () {
-                  if (_titleController.text.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please enter a title')),
-                    );
-                    return;
-                  }
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Listing submitted successfully!'),
-                    ),
+            CustomButton(
+              text: AppStrings.submitListing,
+              onPressed: () {
+                if (_titleController.text.isEmpty) {
+                  Helpers.showErrorSnackbar(
+                    context,
+                    AppStrings.pleaseEnterTitle,
                   );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF9C4DFF), // NEW PURPLE
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text(
-                  'Submit Listing',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
+                  return;
+                }
+                Helpers.showSuccessSnackbar(
+                  context,
+                  AppStrings.listingSubmitted,
+                );
+              },
+              height: 50,
+              borderRadius: BorderRadius.circular(8),
             ),
           ],
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.black,
+        backgroundColor: AppColors.background,
         currentIndex: 1,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: Color(0xFF9C4DFF), // NEW PURPLE
-        unselectedItemColor: Colors.grey,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.textHint,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
-            label: 'Home',
+            label: AppStrings.home,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.add_circle_outline),
-            label: 'Add',
+            label: AppStrings.add,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outlined),
-            label: 'Profile',
+            label: AppStrings.profile,
           ),
         ],
         onTap: (index) {
@@ -315,9 +281,7 @@ class _AddListingScreenState extends State<AddListingScreen> {
       child: Container(
         height: 48,
         decoration: BoxDecoration(
-          color: isSelected
-              ? Color(0xFF9C4DFF)
-              : Colors.transparent, // NEW PURPLE
+          color: isSelected ? AppColors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
         ),
         child: TextButton(
@@ -335,7 +299,7 @@ class _AddListingScreenState extends State<AddListingScreen> {
           child: Text(
             text,
             style: TextStyle(
-              color: isSelected ? Colors.white : Colors.white,
+              color: isSelected ? AppColors.textPrimary : AppColors.textPrimary,
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),

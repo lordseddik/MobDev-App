@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'add_listing_screen.dart';
+import '../core/constants/app_colors.dart';
+import '../core/constants/app_strings.dart';
+import '../core/widgets/custom_button.dart';
+import '../core/widgets/custom_textfield.dart';
+import '../core/utils/helpers.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -22,20 +27,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
-          'Edit Profile',
+          AppStrings.editProfile,
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 20,
-            color: Colors.white,
+            color: AppColors.textPrimary,
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.black,
+        backgroundColor: AppColors.background,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -51,26 +56,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     height: 100,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.grey[800],
+                      color: AppColors.inputBackground,
                     ),
                     child: const Icon(
                       Icons.person,
                       size: 60,
-                      color: Colors.grey,
+                      color: AppColors.textHint,
                     ),
                   ),
                   const SizedBox(height: 10),
-                  ElevatedButton.icon(
+                  CustomButton(
+                    text: AppStrings.changePhoto,
                     onPressed: () {},
-                    icon: const Icon(Icons.camera_alt, size: 16),
-                    label: const Text('Change Photo'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey[800],
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                    ),
+                    icon: Icons.camera_alt,
+                    backgroundColor: AppColors.inputBackground,
+                    height: 40,
+                    width: 150,
+                    fontSize: 14,
+                    borderRadius: BorderRadius.circular(6),
                   ),
                 ],
               ),
@@ -82,71 +85,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey[900],
+                color: AppColors.cardBackground,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Personal Information',
+                    AppStrings.personalInformation,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 16),
 
                   const Text(
-                    'Username',
+                    AppStrings.username,
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  TextFormField(
+                  CustomTextField(
                     controller: _usernameController,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: 'gameonlegend',
-                      hintStyle: const TextStyle(color: Colors.grey),
-                      prefixIcon: const Icon(Icons.person, color: Colors.grey),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: Colors.grey[800],
-                    ),
+                    hintText: 'gameonlegend',
+                    prefixIcon: Icons.person,
+                    borderRadius: 8,
+                    fillColor: AppColors.inputBackground,
                   ),
                   const SizedBox(height: 16),
 
                   const Text(
-                    'Email Address',
+                    AppStrings.emailAddress,
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  TextFormField(
+                  CustomTextField(
                     controller: _emailController,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: 'gameonlegend@replay.ct',
-                      hintStyle: const TextStyle(color: Colors.grey),
-                      prefixIcon: const Icon(Icons.email, color: Colors.grey),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: Colors.grey[800],
-                    ),
+                    hintText: 'gameonlegend@replay.ct',
+                    prefixIcon: Icons.email,
+                    keyboardType: TextInputType.emailAddress,
+                    borderRadius: 8,
+                    fillColor: AppColors.inputBackground,
                   ),
                 ],
               ),
@@ -158,106 +146,71 @@ class _ProfileScreenState extends State<ProfileScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey[900],
+                color: AppColors.cardBackground,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Security',
+                    AppStrings.security,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 16),
 
                   const Text(
-                    'Current Password',
+                    AppStrings.currentPassword,
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  TextFormField(
+                  CustomTextField(
                     controller: _currentPasswordController,
+                    hintText: AppStrings.enterCurrentPassword,
+                    prefixIcon: Icons.lock,
                     obscureText: true,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: 'Enter current password',
-                      hintStyle: const TextStyle(color: Colors.grey),
-                      prefixIcon: const Icon(Icons.lock, color: Colors.grey),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: Colors.grey[800],
-                    ),
+                    borderRadius: 8,
+                    fillColor: AppColors.inputBackground,
                   ),
                   const SizedBox(height: 16),
 
                   const Text(
-                    'New Password',
+                    AppStrings.newPassword,
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  TextFormField(
+                  CustomTextField(
                     controller: _newPasswordController,
+                    hintText: AppStrings.enterNewPassword,
+                    prefixIcon: Icons.lock_outline,
                     obscureText: true,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: 'Enter new password',
-                      hintStyle: const TextStyle(color: Colors.grey),
-                      prefixIcon: const Icon(
-                        Icons.lock_outline,
-                        color: Colors.grey,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: Colors.grey[800],
-                    ),
+                    borderRadius: 8,
+                    fillColor: AppColors.inputBackground,
                   ),
                   const SizedBox(height: 16),
 
                   // Save Changes Button
-                  SizedBox(
-                    width: double.infinity,
+                  CustomButton(
+                    text: AppStrings.saveChanges,
+                    onPressed: () {
+                      Helpers.showSuccessSnackbar(
+                        context,
+                        AppStrings.changesSaved,
+                      );
+                    },
                     height: 50,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Changes saved successfully!'),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF9C4DFF), // NEW PURPLE
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text(
-                        'Save Changes',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ],
               ),
@@ -277,79 +230,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Danger Zone',
+                    AppStrings.dangerZone,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Deleting your account is a permanent action and cannot be undone.',
-                    style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                    AppStrings.deleteAccountWarning,
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                    ),
                   ),
                   const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 45,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                            backgroundColor: Colors.grey[900],
-                            title: const Text(
-                              'Delete Account',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            content: const Text(
-                              'Are you sure you want to delete your account? This action cannot be undone.',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx),
-                                child: const Text(
-                                  'Cancel',
-                                  style: TextStyle(color: Colors.grey),
-                                ),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(ctx);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Account deletion requested!',
-                                      ),
-                                    ),
-                                  );
-                                },
-                                style: TextButton.styleFrom(
-                                  foregroundColor: Colors.red,
-                                ),
-                                child: const Text('Delete'),
-                              ),
-                            ],
-                          ),
+                  CustomButton(
+                    text: AppStrings.deleteAccount,
+                    onPressed: () async {
+                      final confirmed = await Helpers.showConfirmationDialog(
+                        context,
+                        title: AppStrings.deleteAccount,
+                        message: AppStrings.deleteAccountConfirm,
+                        confirmText: AppStrings.delete,
+                        cancelText: AppStrings.cancel,
+                        confirmColor: AppColors.error,
+                      );
+                      if (confirmed) {
+                        Helpers.showSnackbar(
+                          context,
+                          AppStrings.accountDeleted,
                         );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red[800],
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text(
-                        'Delete Account',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                      }
+                    },
+                    backgroundColor: AppColors.error,
+                    height: 45,
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ],
               ),
@@ -358,23 +275,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.black,
+        backgroundColor: AppColors.background,
         currentIndex: 2,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: Color(0xFF9C4DFF), // NEW PURPLE
-        unselectedItemColor: Colors.grey,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.textHint,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
-            label: 'Home',
+            label: AppStrings.home,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.add_circle_outline),
-            label: 'Add',
+            label: AppStrings.add,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outlined),
-            label: 'Profile',
+            label: AppStrings.profile,
           ),
         ],
         onTap: (index) {
