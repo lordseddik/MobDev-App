@@ -1,4 +1,3 @@
-import '../models/favorite_item_model.dart';
 import '../models/item_model.dart';
 import 'supabase_service.dart';
 
@@ -12,7 +11,7 @@ class FavoriteService {
         'userid': userId,
         'itemid': itemId,
       });
-      
+
       return true;
     } catch (e) {
       print('Error adding to favorites: $e');
@@ -27,7 +26,7 @@ class FavoriteService {
           .from('favorite_item')
           .select('itemid, items(*)')
           .eq('userid', userId);
-      
+
       return (response as List)
           .map((json) => ItemModel.fromJson(json['items']))
           .toList();
@@ -46,7 +45,7 @@ class FavoriteService {
           .eq('userid', userId)
           .eq('itemid', itemId)
           .maybeSingle();
-      
+
       return response != null;
     } catch (e) {
       print('Error checking favorite: $e');
@@ -62,7 +61,7 @@ class FavoriteService {
           .delete()
           .eq('userid', userId)
           .eq('itemid', itemId);
-      
+
       return true;
     } catch (e) {
       print('Error removing from favorites: $e');
@@ -73,7 +72,7 @@ class FavoriteService {
   // TOGGLE - Add or remove from favorites
   Future<bool> toggleFavorite(int userId, int itemId) async {
     final isFav = await isFavorited(userId, itemId);
-    
+
     if (isFav) {
       return await removeFromFavorites(userId, itemId);
     } else {
