@@ -1,27 +1,99 @@
 import 'package:flutter/material.dart';
 import 'item/add_listing_screen.dart';
 import 'profile_screen.dart';
+import '../../data/models/user_model.dart';
+import '../../data/datasources/user_service.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_strings.dart';
+import '../../core/utils/helpers.dart';
+import '../../core/widgets/loading_widget.dart';
 
-class ContactSellerScreen extends StatelessWidget {
-  const ContactSellerScreen({super.key});
+class ContactSellerScreen extends StatefulWidget {
+  final int sellerId;
+
+  const ContactSellerScreen({super.key, required this.sellerId});
+
+  @override
+  State<ContactSellerScreen> createState() => _ContactSellerScreenState();
+}
+
+class _ContactSellerScreenState extends State<ContactSellerScreen> {
+  final UserService _userService = UserService();
+  UserModel? _seller;
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSellerInfo();
+  }
+
+  Future<void> _loadSellerInfo() async {
+    try {
+      final seller = await _userService.getUserById(widget.sellerId);
+      setState(() {
+        _seller = seller;
+        _isLoading = false;
+        if (seller == null) {
+          _errorMessage = AppStrings.errorLoadingData;
+        }
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = AppStrings.errorLoadingData;
+      });
+    }
+  }
+
+  void _handlePhoneCall() {
+    if (_seller?.phoneNum != null) {
+      Helpers.makePhoneCall(_seller!.phoneNum.toString());
+    } else {
+      Helpers.showErrorSnackbar(context, 'Phone number not available');
+    }
+  }
+
+  void _handleEmail() {
+    if (_seller?.email != null && _seller!.email.isNotEmpty) {
+      Helpers.sendEmail(_seller!.email, subject: 'Inquiry from RePlay App');
+    } else {
+      Helpers.showErrorSnackbar(context, 'Email not available');
+    }
+  }
+
+  void _handleWhatsApp() {
+    if (_seller?.phoneNum != null) {
+      Helpers.openWhatsApp(
+        _seller!.phoneNum.toString(),
+        'Hi! I found your listing on RePlay and I\'m interested.',
+      );
+    } else {
+      Helpers.showErrorSnackbar(
+        context,
+        'Phone number not available for WhatsApp',
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
-          'Contact Seller',
+          AppStrings.contactSeller,
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 20,
-            color: Colors.white,
+            color: AppColors.textPrimary,
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.black,
+        backgroundColor: AppColors.background,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -29,206 +101,30 @@ class ContactSellerScreen extends StatelessWidget {
           },
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Seller Info Section
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  // Profile Picture
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.grey[800],
-                    ),
-                    child: const Icon(
-                      Icons.person,
-                      size: 40,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  // Seller Name and Status
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Emily R.',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.green,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'Online',
-                              style: TextStyle(
-                                color: Colors.green,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Contact Options Section
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Contact Options',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Phone Number Option
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey[800],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: ListTile(
-                      leading: const Icon(Icons.phone, color: Colors.grey),
-                      title: const Text(
-                        'Phone Number',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      subtitle: const Text(
-                        '+213 555555555',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                      trailing: const Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: Colors.grey,
-                      ),
-                      onTap: () {
-                        // Phone call functionality
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Email Address Option
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey[800],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: ListTile(
-                      leading: const Icon(Icons.email, color: Colors.grey),
-                      title: const Text(
-                        'Email Address',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      subtitle: const Text(
-                        'emily.r@replayapp.com',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                      trailing: const Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: Colors.grey,
-                      ),
-                      onTap: () {
-                        // Email functionality
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Message Seller Button
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () {
-                  // Message seller functionality
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF9C4DFF),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text(
-                  'Message Seller',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+      body: _isLoading
+          ? const LoadingWidget(message: 'Loading seller info...')
+          : _errorMessage != null
+          ? _buildErrorState()
+          : _buildContent(),
       // Bottom Navigation Bar
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.black,
-        currentIndex: 0, // Home is selected (you can change this)
+        backgroundColor: AppColors.background,
+        currentIndex: 0,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF9C4DFF),
-        unselectedItemColor: Colors.grey,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.textSecondary,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
-            label: 'Home',
+            label: AppStrings.home,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.add_circle_outline),
-            label: 'Add',
+            label: AppStrings.add,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outlined),
-            label: 'Profile',
+            label: AppStrings.profile,
           ),
         ],
         onTap: (index) {
@@ -250,6 +146,225 @@ class ContactSellerScreen extends StatelessWidget {
           }
           // Index 0 (Home) stays on current page or you can add HomeScreen navigation
         },
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, color: AppColors.error, size: 64),
+          const SizedBox(height: 16),
+          Text(
+            _errorMessage ?? AppStrings.sellerNotFound,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 16,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                _isLoading = true;
+                _errorMessage = null;
+              });
+              _loadSellerInfo();
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            child: const Text(
+              AppStrings.tryAgain,
+              style: TextStyle(color: AppColors.textPrimary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          // Seller Info Section
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.cardBackground,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                // Profile Picture
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.inputBackground,
+                    image:
+                        _seller?.imageUrl != null &&
+                            _seller!.imageUrl!.isNotEmpty
+                        ? DecorationImage(
+                            image: NetworkImage(_seller!.imageUrl!),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                  ),
+                  child: _seller?.imageUrl == null || _seller!.imageUrl!.isEmpty
+                      ? const Icon(
+                          Icons.person,
+                          size: 40,
+                          color: AppColors.textSecondary,
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 16),
+                // Seller Name
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _seller?.userName ?? AppStrings.guest,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _seller?.email ?? '',
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Contact Options Section
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.cardBackground,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  AppStrings.contactOptions,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Phone Number Option
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.inputBackground,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: ListTile(
+                    leading: const Icon(
+                      Icons.phone,
+                      color: AppColors.textSecondary,
+                    ),
+                    title: const Text(
+                      AppStrings.phoneNumber,
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Text(
+                      _seller?.phoneNum != null
+                          ? '+${_seller!.phoneNum}'
+                          : AppStrings.phoneNotAvailable,
+                      style: const TextStyle(color: AppColors.textSecondary),
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: AppColors.textSecondary,
+                    ),
+                    onTap: _handlePhoneCall,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Email Address Option
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.inputBackground,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: ListTile(
+                    leading: const Icon(
+                      Icons.email,
+                      color: AppColors.textSecondary,
+                    ),
+                    title: const Text(
+                      AppStrings.emailAddress,
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Text(
+                      _seller?.email ?? AppStrings.emailNotAvailable,
+                      style: const TextStyle(color: AppColors.textSecondary),
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: AppColors.textSecondary,
+                    ),
+                    onTap: _handleEmail,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Message Seller Button (WhatsApp)
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton.icon(
+              onPressed: _handleWhatsApp,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.textPrimary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              icon: const Icon(Icons.message),
+              label: const Text(
+                AppStrings.messageSeller,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

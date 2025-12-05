@@ -9,6 +9,8 @@ import '../../data/datasources/favorite_service.dart';
 import '../../data/models/user_model.dart';
 import 'edit_profile_screen.dart';
 import 'home/product_page_screen.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_strings.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -17,12 +19,13 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProviderStateMixin {
+class _ProfileScreenState extends State<ProfileScreen>
+    with SingleTickerProviderStateMixin {
   final ItemService _itemService = ItemService();
   final AuthService _authService = AuthService();
   final UserService _userService = UserService();
   final FavoriteService _favoriteService = FavoriteService();
-  
+
   late TabController _tabController;
   UserModel? _currentUser;
   List<ItemModel> _myListings = [];
@@ -44,26 +47,38 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
 
   Future<void> _loadUserData() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final authUser = _authService.getCurrentUser();
-      if (authUser != null) {
+      print('Auth user: ${authUser?.email}'); // Debug
+
+      if (authUser != null && authUser.email != null) {
         // Get database user
         final dbUser = await _userService.getUserByEmail(authUser.email!);
-        if (dbUser != null) {
+        print('DB user: ${dbUser?.userId}, ${dbUser?.userName}'); // Debug
+
+        if (dbUser != null && dbUser.userId != null) {
           setState(() => _currentUser = dbUser);
-          
+
           // Load user's listings
           final myItems = await _itemService.getItemsByUser(dbUser.userId!);
-          
+          print('My items count: ${myItems.length}'); // Debug
+
           // Load user's favorites
-          final favorites = await _favoriteService.getUserFavorites(dbUser.userId!);
-          
+          final favorites = await _favoriteService.getUserFavorites(
+            dbUser.userId!,
+          );
+          print('Favorites count: ${favorites.length}'); // Debug
+
           setState(() {
             _myListings = myItems;
             _myFavorites = favorites;
           });
+        } else {
+          print('DB user not found for email: ${authUser.email}');
         }
+      } else {
+        print('No authenticated user found');
       }
     } catch (e) {
       print('Error loading profile data: $e');
@@ -76,15 +91,15 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: AppColors.background,
         body: Center(
-          child: CircularProgressIndicator(color: Color(0xFF9C4DFF)),
+          child: CircularProgressIndicator(color: AppColors.primary),
         ),
       );
     }
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -93,10 +108,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
             Expanded(
               child: TabBarView(
                 controller: _tabController,
-                children: [
-                  _buildMyListings(),
-                  _buildFavorites(),
-                ],
+                children: [_buildMyListings(), _buildFavorites()],
               ),
             ),
           ],
@@ -119,11 +131,8 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                 height: 100,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF9C4DFF),
-                  border: Border.all(
-                    color: const Color(0xFF9C4DFF),
-                    width: 3,
-                  ),
+                  color: AppColors.primary,
+                  border: Border.all(color: AppColors.primary, width: 3),
                 ),
                 child: _currentUser?.imageUrl != null
                     ? ClipOval(
@@ -134,7 +143,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                             return const Icon(
                               Icons.person,
                               size: 60,
-                              color: Colors.white,
+                              color: AppColors.textPrimary,
                             );
                           },
                         ),
@@ -142,7 +151,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                     : const Icon(
                         Icons.person,
                         size: 60,
-                        color: Colors.white,
+                        color: AppColors.textPrimary,
                       ),
               ),
               Positioned(
@@ -152,9 +161,9 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                   width: 28,
                   height: 28,
                   decoration: BoxDecoration(
-                    color: Colors.green,
+                    color: AppColors.online,
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.black, width: 2),
+                    border: Border.all(color: AppColors.background, width: 2),
                   ),
                 ),
               ),
@@ -163,9 +172,9 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           const SizedBox(height: 16),
           // Username
           Text(
-            _currentUser?.userName ?? 'Guest',
+            _currentUser?.userName ?? AppStrings.guest,
             style: const TextStyle(
-              color: Colors.white,
+              color: AppColors.textPrimary,
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
@@ -176,27 +185,22 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
             onPressed: () async {
               await Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const EditProfileScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const EditProfileScreen()),
               );
               // Reload data after editing
               _loadUserData();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2A2A2A),
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.surfaceLight,
+              foregroundColor: AppColors.textPrimary,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(25),
               ),
             ),
             child: const Text(
-              'Edit Profile',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              AppStrings.editProfile,
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -208,25 +212,22 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF2A2A2A),
+        color: AppColors.surfaceLight,
         borderRadius: BorderRadius.circular(25),
       ),
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
-          color: const Color(0xFF9C4DFF),
+          color: AppColors.primary,
           borderRadius: BorderRadius.circular(25),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
-        labelColor: Colors.white,
-        unselectedLabelColor: Colors.grey,
-        labelStyle: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 16,
-        ),
+        labelColor: AppColors.textPrimary,
+        unselectedLabelColor: AppColors.textHint,
+        labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         tabs: const [
-          Tab(text: 'My Listings'),
-          Tab(text: 'Favorites'),
+          Tab(text: AppStrings.myListings),
+          Tab(text: AppStrings.favorites),
         ],
       ),
     );
@@ -241,24 +242,21 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
             Icon(
               Icons.inventory_2_outlined,
               size: 80,
-              color: Colors.grey[700],
+              color: AppColors.textHint,
             ),
             const SizedBox(height: 16),
             Text(
-              'No listings yet',
+              AppStrings.noListings,
               style: TextStyle(
-                color: Colors.grey[600],
+                color: AppColors.textHint,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Start adding items to sell, rent or trade',
-              style: TextStyle(
-                color: Colors.grey[700],
-                fontSize: 14,
-              ),
+              AppStrings.startAddingItems,
+              style: TextStyle(color: AppColors.textHint, fontSize: 14),
             ),
           ],
         ),
@@ -288,27 +286,20 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.favorite_border,
-              size: 80,
-              color: Colors.grey[700],
-            ),
+            Icon(Icons.favorite_border, size: 80, color: AppColors.textHint),
             const SizedBox(height: 16),
             Text(
-              'No favorites yet',
+              AppStrings.noFavorites,
               style: TextStyle(
-                color: Colors.grey[600],
+                color: AppColors.textHint,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'Start favoriting items you like',
-              style: TextStyle(
-                color: Colors.grey[700],
-                fontSize: 14,
-              ),
+              AppStrings.startFavoritingItems,
+              style: TextStyle(color: AppColors.textHint, fontSize: 14),
             ),
           ],
         ),
@@ -337,14 +328,12 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => Productpage(item: item),
-          ),
+          MaterialPageRoute(builder: (_) => Productpage(item: item)),
         ).then((_) => _loadUserData()); // Reload after viewing
       },
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1A),
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(18),
         ),
         child: Column(
@@ -364,13 +353,13 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
-                        color: Colors.white,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 6),
                     _buildPriceTag(item),
                     const Spacer(),
-                    _buildTypeBadge(item.type ?? 'sell'),
+                    _buildTypeBadge(item.type ?? AppStrings.sell),
                   ],
                 ),
               ),
@@ -412,7 +401,9 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           Container(
             height: 140,
             decoration: BoxDecoration(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(18),
+              ),
               color: Colors.black.withOpacity(0.7),
             ),
             child: const Center(
@@ -432,18 +423,17 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
 
   Widget _buildPriceTag(ItemModel item) {
     String priceText;
-    if (item.type == 'rent') {
-      priceText = '\$${item.price ?? 0}/day';
-    } else if (item.type == 'trade') {
-      priceText = 'Trade';
+    if (item.type == AppStrings.rent) {
+      priceText = '\$${item.price ?? 0}/${AppStrings.rent.toLowerCase()}';
+    } else if (item.type == AppStrings.trade) {
+      priceText = AppStrings.trade;
     } else {
       priceText = '\$${item.price ?? 0}';
     }
-
     return Text(
       priceText,
       style: const TextStyle(
-        color: Color(0xFF9C4DFF),
+        color: AppColors.primary,
         fontWeight: FontWeight.bold,
         fontSize: 16,
       ),
@@ -453,18 +443,16 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   Widget _buildTypeBadge(String type) {
     Color color;
     String label;
-    
-    if (type == 'rent') {
-      color = Colors.blueAccent;
-      label = 'Rent';
-    } else if (type == 'trade') {
-      color = Colors.purpleAccent;
-      label = 'Trade';
+    if (type == AppStrings.rent) {
+      color = AppColors.info;
+      label = AppStrings.rent;
+    } else if (type == AppStrings.trade) {
+      color = AppColors.primaryLight;
+      label = AppStrings.trade;
     } else {
-      color = Colors.green;
-      label = 'Sell';
+      color = AppColors.success;
+      label = AppStrings.sell;
     }
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
@@ -474,7 +462,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
       child: Text(
         label,
         style: const TextStyle(
-          color: Colors.white,
+          color: AppColors.textPrimary,
           fontWeight: FontWeight.bold,
           fontSize: 11,
         ),

@@ -12,7 +12,7 @@ class UserService {
           .insert(user.toJson())
           .select()
           .single();
-      
+
       return UserModel.fromJson(response);
     } catch (e) {
       print('Error creating user: $e');
@@ -27,7 +27,7 @@ class UserService {
           .from('users')
           .select()
           .order('datecreated', ascending: false);
-      
+
       return (response as List)
           .map((json) => UserModel.fromJson(json))
           .toList();
@@ -45,7 +45,7 @@ class UserService {
           .select()
           .eq('userid', userId)
           .single();
-      
+
       return UserModel.fromJson(response);
     } catch (e) {
       print('Error fetching user: $e');
@@ -59,9 +59,13 @@ class UserService {
       final response = await _supabase
           .from('users')
           .select()
-          .eq('email', email)
-          .single();
-      
+          .eq('email', email.toLowerCase().trim())
+          .maybeSingle();
+
+      if (response == null) {
+        print('No user found for email: $email');
+        return null;
+      }
       return UserModel.fromJson(response);
     } catch (e) {
       print('Error fetching user by email: $e');
@@ -72,11 +76,8 @@ class UserService {
   // UPDATE - Update user
   Future<bool> updateUser(int userId, Map<String, dynamic> updates) async {
     try {
-      await _supabase
-          .from('users')
-          .update(updates)
-          .eq('userid', userId);
-      
+      await _supabase.from('users').update(updates).eq('userid', userId);
+
       return true;
     } catch (e) {
       print('Error updating user: $e');
@@ -87,11 +88,8 @@ class UserService {
   // DELETE - Delete user
   Future<bool> deleteUser(int userId) async {
     try {
-      await _supabase
-          .from('users')
-          .delete()
-          .eq('userid', userId);
-      
+      await _supabase.from('users').delete().eq('userid', userId);
+
       return true;
     } catch (e) {
       print('Error deleting user: $e');

@@ -3,6 +3,10 @@
 import 'package:flutter/material.dart';
 import '../../../data/datasources/auth_service.dart';
 import '../home/home_screen.dart';
+import '../../../core/widgets/custom_button.dart';
+import '../../../core/widgets/custom_textfield.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_strings.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -17,7 +21,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -72,7 +77,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (user != null && mounted) {
         _showSuccessSnackbar('Account created successfully!');
-        
+
         // Navigate to home screen
         Navigator.pushReplacement(
           context,
@@ -135,14 +140,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 children: [
                   Icon(
                     Icons.videogame_asset,
-                    color: Color(0xFF9C4DFF),
+                    color: AppColors.primary,
                     size: 40,
                   ),
                   SizedBox(width: 8),
                   Text(
-                    'RePlay',
+                    AppStrings.appName,
                     style: TextStyle(
-                      color: Color(0xFF9C4DFF),
+                      color: AppColors.primary,
                       fontSize: 40,
                       fontWeight: FontWeight.bold,
                     ),
@@ -151,9 +156,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 20),
               const Text(
-                'Join the Gaming Community',
+                AppStrings.registerSubtitle,
                 style: TextStyle(
-                  color: Colors.white70,
+                  color: AppColors.textSecondary,
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                 ),
@@ -161,181 +166,76 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 40),
 
               // Username TextField
-              TextField(
+              CustomTextField(
                 controller: _userNameController,
                 enabled: !_isLoading,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(
-                    Icons.person_outline,
-                    color: Colors.white70,
-                  ),
-                  hintText: 'Username',
-                  hintStyle: const TextStyle(color: Colors.white70),
-                  filled: true,
-                  fillColor: Colors.transparent,
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Colors.white24),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Color(0xFF9C4DFF)),
-                  ),
-                  disabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Colors.white12),
-                  ),
-                ),
+                hintText: AppStrings.username,
+                prefixIcon: Icons.person_outline,
               ),
               const SizedBox(height: 15),
 
               // Email TextField
-              TextField(
+              CustomTextField(
                 controller: _emailController,
                 enabled: !_isLoading,
+                hintText: AppStrings.email,
+                prefixIcon: Icons.email_outlined,
                 keyboardType: TextInputType.emailAddress,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(
-                    Icons.email_outlined,
-                    color: Colors.white70,
-                  ),
-                  hintText: 'Email address',
-                  hintStyle: const TextStyle(color: Colors.white70),
-                  filled: true,
-                  fillColor: Colors.transparent,
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Colors.white24),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Color(0xFF9C4DFF)),
-                  ),
-                  disabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Colors.white12),
-                  ),
-                ),
               ),
               const SizedBox(height: 15),
 
               // Phone TextField (Optional)
-              TextField(
+              CustomTextField(
                 controller: _phoneController,
                 enabled: !_isLoading,
+                hintText: AppStrings.phoneOptional,
+                prefixIcon: Icons.phone_outlined,
                 keyboardType: TextInputType.phone,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(
-                    Icons.phone_outlined,
-                    color: Colors.white70,
-                  ),
-                  hintText: 'Phone number (optional)',
-                  hintStyle: const TextStyle(color: Colors.white70),
-                  filled: true,
-                  fillColor: Colors.transparent,
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Colors.white24),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Color(0xFF9C4DFF)),
-                  ),
-                  disabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Colors.white12),
-                  ),
-                ),
               ),
               const SizedBox(height: 15),
 
               // Password TextField
-              TextField(
+              CustomTextField(
                 controller: _passwordController,
                 enabled: !_isLoading,
+                hintText: AppStrings.password,
+                prefixIcon: Icons.lock_outline,
                 obscureText: _obscurePassword,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(
-                    Icons.lock_outline,
-                    color: Colors.white70,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    color: AppColors.textSecondary,
                   ),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      color: Colors.white70,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
-                  ),
-                  hintText: 'Password',
-                  hintStyle: const TextStyle(color: Colors.white70),
-                  filled: true,
-                  fillColor: Colors.transparent,
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Colors.white24),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Color(0xFF9C4DFF)),
-                  ),
-                  disabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Colors.white12),
-                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
                 ),
               ),
               const SizedBox(height: 15),
 
               // Confirm Password TextField
-              TextField(
+              CustomTextField(
                 controller: _confirmPasswordController,
                 enabled: !_isLoading,
+                hintText: AppStrings.confirmPassword,
+                prefixIcon: Icons.lock_outline,
                 obscureText: _obscureConfirmPassword,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(
-                    Icons.lock_outline,
-                    color: Colors.white70,
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscureConfirmPassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    color: AppColors.textSecondary,
                   ),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureConfirmPassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      color: Colors.white70,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscureConfirmPassword = !_obscureConfirmPassword;
-                      });
-                    },
-                  ),
-                  hintText: 'Confirm Password',
-                  hintStyle: const TextStyle(color: Colors.white70),
-                  filled: true,
-                  fillColor: Colors.transparent,
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Colors.white24),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Color(0xFF9C4DFF)),
-                  ),
-                  disabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: Colors.white12),
-                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscureConfirmPassword = !_obscureConfirmPassword;
+                    });
+                  },
                 ),
               ),
               const SizedBox(height: 30),
@@ -343,51 +243,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
               // Sign Up Button
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: CustomButton(
                   onPressed: _isLoading ? null : _handleSignUp,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    disabledBackgroundColor: Colors.green.withOpacity(0.5),
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : const Text(
-                          'Create Account',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
+                  text: AppStrings.createAccount,
+                  isLoading: _isLoading,
+                  backgroundColor: AppColors.success,
                 ),
               ),
               const SizedBox(height: 20),
-              
+
               // Already have an account
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Text(
-                    'Already have an account? ',
-                    style: TextStyle(color: Colors.white70),
+                    AppStrings.alreadyHaveAccount,
+                    style: TextStyle(color: AppColors.textSecondary),
                   ),
                   GestureDetector(
                     onTap: _isLoading ? null : () => Navigator.pop(context),
                     child: const Text(
-                      'Login',
+                      AppStrings.login,
                       style: TextStyle(
-                        color: Color(0xFF9C4DFF),
+                        color: AppColors.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

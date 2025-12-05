@@ -10,6 +10,8 @@ import 'product_page_screen.dart';
 import '../item/add_listing_screen.dart';
 import '../profile_screen.dart';
 import '../item/edit_item_screen.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_strings.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,23 +25,23 @@ class _HomeScreenState extends State<HomeScreen> {
   final AuthService _authService = AuthService();
   final FavoriteService _favoriteService = FavoriteService();
   final UserService _userService = UserService();
-  
+
   int _currentIndex = 0;
   int _activeCategoryIndex = 0;
-  
+
   List<ItemModel> _allItems = [];
   List<ItemModel> _displayedItems = [];
   bool _isLoading = true;
   int? _currentUserId;
-  
+
   final TextEditingController _searchController = TextEditingController();
-  
+
   final List<String> _categories = [
-    "Games",
-    "Consoles",
-    "Accessories",
-    "Electronics",
-    "All"
+    AppStrings.games,
+    AppStrings.consoles,
+    AppStrings.accessories,
+    AppStrings.electronics,
+    AppStrings.all,
   ];
 
   @override
@@ -73,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadItems() async {
     setState(() => _isLoading = true);
-    
+
     try {
       _allItems = await _itemService.getAllItems();
       _filterItems();
@@ -102,11 +104,12 @@ class _HomeScreenState extends State<HomeScreen> {
       } else {
         final category = _categories[_activeCategoryIndex];
         _displayedItems = _allItems
-            .where((item) => 
-                item.category?.toLowerCase() == category.toLowerCase())
+            .where(
+              (item) => item.category?.toLowerCase() == category.toLowerCase(),
+            )
             .toList();
       }
-      
+
       // Apply search filter if there's a query
       if (_searchController.text.isNotEmpty) {
         _searchItems(_searchController.text);
@@ -120,9 +123,14 @@ class _HomeScreenState extends State<HomeScreen> {
         _filterItems();
       } else {
         _displayedItems = _allItems
-            .where((item) =>
-                item.title.toLowerCase().contains(query.toLowerCase()) ||
-                (item.description?.toLowerCase().contains(query.toLowerCase()) ?? false))
+            .where(
+              (item) =>
+                  item.title.toLowerCase().contains(query.toLowerCase()) ||
+                  (item.description?.toLowerCase().contains(
+                        query.toLowerCase(),
+                      ) ??
+                      false),
+            )
             .toList();
       }
     });
@@ -141,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       await _favoriteService.toggleFavorite(_currentUserId!, itemId);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -159,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.background,
       body: _buildCurrentScreen(),
       bottomNavigationBar: _buildBottomNavBar(),
     );
@@ -224,16 +232,12 @@ class _HomeScreenState extends State<HomeScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: const [
-        Icon(
-          Icons.videogame_asset,
-          color: Color(0xFF9C4DFF),
-          size: 28,
-        ),
+        Icon(Icons.videogame_asset, color: AppColors.primary, size: 28),
         SizedBox(width: 8),
         Text(
-          'RePlay',
+          AppStrings.appName,
           style: TextStyle(
-            color: Color(0xFF9C4DFF),
+            color: AppColors.primary,
             fontSize: 28,
             fontWeight: FontWeight.bold,
           ),
@@ -246,28 +250,32 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
         children: [
-          const Icon(Icons.search, color: Colors.white, size: 22),
+          const Icon(Icons.search, color: AppColors.textPrimary, size: 22),
           const SizedBox(width: 10),
           Expanded(
             child: TextField(
               controller: _searchController,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: AppColors.textPrimary),
               onChanged: _searchItems,
               decoration: const InputDecoration(
                 hintText: "Search for games or accessories...",
-                hintStyle: TextStyle(color: Colors.grey, fontSize: 14),
+                hintStyle: TextStyle(color: AppColors.textHint, fontSize: 14),
                 border: InputBorder.none,
               ),
             ),
           ),
           if (_searchController.text.isNotEmpty)
             IconButton(
-              icon: const Icon(Icons.clear, color: Colors.grey, size: 20),
+              icon: const Icon(
+                Icons.clear,
+                color: AppColors.textHint,
+                size: 20,
+              ),
               onPressed: () {
                 _searchController.clear();
                 _searchItems('');
@@ -298,17 +306,19 @@ class _HomeScreenState extends State<HomeScreen> {
               margin: const EdgeInsets.only(right: 12),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
-                color: isActive ? const Color(0xFF9C4DFF) : Colors.transparent,
+                color: isActive ? AppColors.primary : Colors.transparent,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isActive ? const Color(0xFF9C4DFF) : Colors.white,
+                  color: isActive ? AppColors.primary : AppColors.textPrimary,
                 ),
               ),
               child: Center(
                 child: Text(
                   _categories[index],
                   style: TextStyle(
-                    color: isActive ? Colors.white : Colors.white,
+                    color: isActive
+                        ? AppColors.textPrimary
+                        : AppColors.textPrimary,
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),
@@ -334,11 +344,11 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       itemBuilder: (ctx, i) => Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1A),
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(18),
         ),
         child: const Center(
-          child: CircularProgressIndicator(color: Color(0xFF9C4DFF)),
+          child: CircularProgressIndicator(color: AppColors.primary),
         ),
       ),
     );
@@ -351,11 +361,7 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: const EdgeInsets.all(40),
           child: Column(
             children: [
-              Icon(
-                Icons.search_off,
-                size: 64,
-                color: Colors.grey[700],
-              ),
+              Icon(Icons.search_off, size: 64, color: Colors.grey[700]),
               const SizedBox(height: 16),
               Text(
                 'No items found',
@@ -368,10 +374,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 8),
               Text(
                 'Try a different search or category',
-                style: TextStyle(
-                  color: Colors.grey[700],
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.grey[700], fontSize: 14),
               ),
             ],
           ),
@@ -398,14 +401,12 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => Productpage(item: item),
-          ),
+          MaterialPageRoute(builder: (_) => Productpage(item: item)),
         ).then((_) => _loadItems());
       },
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1A),
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(18),
         ),
         child: Column(
@@ -425,7 +426,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
-                        color: Colors.white,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -434,7 +435,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _buildTypeBadge(item.type ?? 'sell'),
+                        _buildTypeBadge(item.type ?? AppStrings.sell),
                         Row(
                           children: [
                             _buildFavoriteButton(item.itemId!),
@@ -467,7 +468,9 @@ class _HomeScreenState extends State<HomeScreen> {
             builder: (_) => EditItemScreen(
               item: item,
               onItemUpdated: (updated) {
-                final idx = _allItems.indexWhere((it) => it.itemId == updated.itemId);
+                final idx = _allItems.indexWhere(
+                  (it) => it.itemId == updated.itemId,
+                );
                 if (idx != -1) {
                   setState(() {
                     _allItems[idx] = updated;
@@ -478,7 +481,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         );
-        
+
         if (result != null) {
           _loadItems();
         }
@@ -489,11 +492,7 @@ class _HomeScreenState extends State<HomeScreen> {
           color: Colors.white.withOpacity(0.1),
           shape: BoxShape.circle,
         ),
-        child: const Icon(
-          Icons.edit,
-          color: Colors.white,
-          size: 18,
-        ),
+        child: const Icon(Icons.edit, color: Colors.white, size: 18),
       ),
     );
   }
@@ -528,7 +527,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: CircularProgressIndicator(
                     value: loadingProgress.expectedTotalBytes != null
                         ? loadingProgress.cumulativeBytesLoaded /
-                            loadingProgress.expectedTotalBytes!
+                              loadingProgress.expectedTotalBytes!
                         : null,
                     color: const Color(0xFF9C4DFF),
                   ),
@@ -541,7 +540,9 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             height: 140,
             decoration: BoxDecoration(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(18),
+              ),
               color: Colors.black.withOpacity(0.7),
             ),
             child: const Center(
@@ -583,18 +584,16 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildTypeBadge(String type) {
     Color color;
     String label;
-    
-    if (type == 'rent') {
-      color = Colors.blueAccent;
-      label = 'Rent';
-    } else if (type == 'trade') {
-      color = Colors.purpleAccent;
-      label = 'Trade';
+    if (type == AppStrings.rent) {
+      color = AppColors.info;
+      label = AppStrings.rent;
+    } else if (type == AppStrings.trade) {
+      color = AppColors.primaryLight;
+      label = AppStrings.trade;
     } else {
-      color = Colors.green;
-      label = 'Sell';
+      color = AppColors.success;
+      label = AppStrings.sell;
     }
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
@@ -604,7 +603,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Text(
         label,
         style: const TextStyle(
-          color: Colors.white,
+          color: AppColors.textPrimary,
           fontWeight: FontWeight.bold,
           fontSize: 11,
         ),
@@ -621,11 +620,7 @@ class _HomeScreenState extends State<HomeScreen> {
           color: Colors.white.withOpacity(0.1),
           shape: BoxShape.circle,
         ),
-        child: const Icon(
-          Icons.favorite_border,
-          color: Colors.white,
-          size: 18,
-        ),
+        child: const Icon(Icons.favorite_border, color: Colors.white, size: 18),
       ),
     );
   }
@@ -645,18 +640,12 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 0,
         type: BottomNavigationBarType.fixed,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
             icon: Icon(Icons.add_circle_outline),
             label: 'Add',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );

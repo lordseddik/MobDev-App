@@ -12,7 +12,7 @@ class ItemService {
           .insert(item.toJson())
           .select()
           .single();
-      
+
       return ItemModel.fromJson(response);
     } catch (e) {
       print('Error creating item: $e');
@@ -27,7 +27,7 @@ class ItemService {
           .from('items')
           .select()
           .order('datecreated', ascending: false);
-      
+
       return (response as List)
           .map((json) => ItemModel.fromJson(json))
           .toList();
@@ -45,7 +45,7 @@ class ItemService {
           .select()
           .eq('itemid', itemId)
           .single();
-      
+
       return ItemModel.fromJson(response);
     } catch (e) {
       print('Error fetching item: $e');
@@ -56,15 +56,19 @@ class ItemService {
   // READ - Get items by user
   Future<List<ItemModel>> getItemsByUser(int userId) async {
     try {
+      print('Fetching items for userId: $userId'); // Debug
       final response = await _supabase
           .from('items')
           .select()
           .eq('userid', userId)
           .order('datecreated', ascending: false);
-      
-      return (response as List)
+
+      print('Raw response: $response'); // Debug
+      final items = (response as List)
           .map((json) => ItemModel.fromJson(json))
           .toList();
+      print('Parsed ${items.length} items for user $userId'); // Debug
+      return items;
     } catch (e) {
       print('Error fetching user items: $e');
       return [];
@@ -80,7 +84,7 @@ class ItemService {
           .eq('type', type)
           .eq('status', true)
           .order('datecreated', ascending: false);
-      
+
       return (response as List)
           .map((json) => ItemModel.fromJson(json))
           .toList();
@@ -99,7 +103,7 @@ class ItemService {
           .eq('category', category)
           .eq('status', true)
           .order('datecreated', ascending: false);
-      
+
       return (response as List)
           .map((json) => ItemModel.fromJson(json))
           .toList();
@@ -118,7 +122,7 @@ class ItemService {
           .ilike('title', '%$query%')
           .eq('status', true)
           .order('datecreated', ascending: false);
-      
+
       return (response as List)
           .map((json) => ItemModel.fromJson(json))
           .toList();
@@ -131,11 +135,8 @@ class ItemService {
   // UPDATE - Update item
   Future<bool> updateItem(int itemId, Map<String, dynamic> updates) async {
     try {
-      await _supabase
-          .from('items')
-          .update(updates)
-          .eq('itemid', itemId);
-      
+      await _supabase.from('items').update(updates).eq('itemid', itemId);
+
       return true;
     } catch (e) {
       print('Error updating item: $e');
@@ -150,7 +151,7 @@ class ItemService {
           .from('items')
           .update({'status': newStatus})
           .eq('itemid', itemId);
-      
+
       return true;
     } catch (e) {
       print('Error toggling item status: $e');
@@ -161,11 +162,8 @@ class ItemService {
   // DELETE - Delete item
   Future<bool> deleteItem(int itemId) async {
     try {
-      await _supabase
-          .from('items')
-          .delete()
-          .eq('itemid', itemId);
-      
+      await _supabase.from('items').delete().eq('itemid', itemId);
+
       return true;
     } catch (e) {
       print('Error deleting item: $e');

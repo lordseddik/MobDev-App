@@ -1,5 +1,27 @@
 /// Application text constants
 class AppStrings {
+  // Profile Screen
+  static const String guest = 'Guest';
+  static const String myListings = 'My Listings';
+  static const String favorites = 'Favorites';
+  static const String noListings = 'No listings yet';
+  static const String startAddingItems =
+      'Start adding items to sell, rent or trade';
+  static const String noFavorites = 'No favorites yet';
+  static const String startFavoritingItems = 'Start favoriting items you like';
+  // Categories
+  static const String games = 'Games';
+  static const String consoles = 'Consoles';
+  static const String accessories = 'Accessories';
+  static const String electronics = 'Electronics';
+  static const String all = 'All';
+  static const String uncategorized = 'Uncategorized';
+  static const String noDescription = 'No description provided.';
+  // Register Screen
+  static const String registerSubtitle = 'Join the Gaming Community';
+  static const String phoneOptional = 'Phone number (optional)';
+  static const String createAccount = 'Create Account';
+  static const String alreadyHaveAccount = 'Already have an account? ';
   AppStrings._(); // Private constructor to prevent instantiation
 
   // App Name
@@ -82,4 +104,11 @@ class AppStrings {
   static const String pricePlaceholder = 'e.g. 500';
   static const String enterCurrentPassword = 'Enter current password';
   static const String enterNewPassword = 'Enter new password';
+
+  // Error Messages
+  static const String errorLoadingData = 'Failed to load data';
+  static const String sellerNotFound = 'Seller not found';
+  static const String tryAgain = 'Try Again';
+  static const String phoneNotAvailable = 'Phone number not available';
+  static const String emailNotAvailable = 'Email not available';
 }

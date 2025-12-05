@@ -3,11 +3,13 @@
 import 'package:flutter/material.dart';
 import '../../../data/datasources/item_service.dart';
 import '../../../data/datasources/auth_service.dart';
+import '../../../data/datasources/user_service.dart';
 import '../../../data/models/item_model.dart';
 import '../home/home_screen.dart';
 
 class AddListingScreen extends StatefulWidget {
-  final Function(ItemModel) onItemCreated; // callback to parent when item created
+  final Function(ItemModel)
+  onItemCreated; // callback to parent when item created
   final bool redirectToHome; // when true, navigate to HomeScreen after creation
 
   const AddListingScreen({
@@ -23,16 +25,17 @@ class AddListingScreen extends StatefulWidget {
 class _AddListingScreenState extends State<AddListingScreen> {
   final ItemService _itemService = ItemService();
   final AuthService _authService = AuthService();
-  
+  final UserService _userService = UserService();
+
   String _selectedType = 'sell';
   String _selectedCategory = 'Games';
-  
+
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _imageUrlController = TextEditingController();
   final TextEditingController _platformController = TextEditingController();
-  
+
   bool _isSubmitting = false;
 
   @override
@@ -129,7 +132,7 @@ class _AddListingScreenState extends State<AddListingScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Title Field
                   const Text(
                     'Title',
@@ -155,7 +158,7 @@ class _AddListingScreenState extends State<AddListingScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Description Field
                   const Text(
                     'Description',
@@ -171,7 +174,8 @@ class _AddListingScreenState extends State<AddListingScreen> {
                     maxLines: 4,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: 'Describe your item, including condition, version, and any extras.',
+                      hintText:
+                          'Describe your item, including condition, version, and any extras.',
                       hintStyle: const TextStyle(color: Colors.grey),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -182,7 +186,7 @@ class _AddListingScreenState extends State<AddListingScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Platform Field (optional)
                   const Text(
                     'Platform (optional)',
@@ -250,9 +254,18 @@ class _AddListingScreenState extends State<AddListingScreen> {
                       ),
                       items: const [
                         DropdownMenuItem(value: 'Games', child: Text('Games')),
-                        DropdownMenuItem(value: 'Consoles', child: Text('Consoles')),
-                        DropdownMenuItem(value: 'Accessories', child: Text('Accessories')),
-                        DropdownMenuItem(value: 'Electronics', child: Text('Electronics')),
+                        DropdownMenuItem(
+                          value: 'Consoles',
+                          child: Text('Consoles'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Accessories',
+                          child: Text('Accessories'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Electronics',
+                          child: Text('Electronics'),
+                        ),
                         DropdownMenuItem(value: 'Other', child: Text('Other')),
                       ],
                       onChanged: (String? newValue) {
@@ -329,10 +342,7 @@ class _AddListingScreenState extends State<AddListingScreen> {
                       if (_selectedType == 'trade')
                         const Text(
                           ' (Not required for trade)',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
                         ),
                     ],
                   ),
@@ -342,8 +352,8 @@ class _AddListingScreenState extends State<AddListingScreen> {
                     enabled: _selectedType != 'trade',
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: _selectedType == 'rent' 
-                          ? 'e.g. 10 (per day)' 
+                      hintText: _selectedType == 'rent'
+                          ? 'e.g. 10 (per day)'
                           : 'e.g. 500',
                       hintStyle: const TextStyle(color: Colors.grey),
                       prefixText: '\$ ',
@@ -353,8 +363,8 @@ class _AddListingScreenState extends State<AddListingScreen> {
                         borderSide: BorderSide.none,
                       ),
                       filled: true,
-                      fillColor: _selectedType == 'trade' 
-                          ? Colors.grey[800] 
+                      fillColor: _selectedType == 'trade'
+                          ? Colors.grey[800]
                           : Colors.black,
                     ),
                     keyboardType: TextInputType.number,
@@ -372,7 +382,9 @@ class _AddListingScreenState extends State<AddListingScreen> {
                 onPressed: _isSubmitting ? null : _submitListing,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF9C4DFF),
-                  disabledBackgroundColor: const Color(0xFF9C4DFF).withOpacity(0.5),
+                  disabledBackgroundColor: const Color(
+                    0xFF9C4DFF,
+                  ).withOpacity(0.5),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -389,7 +401,10 @@ class _AddListingScreenState extends State<AddListingScreen> {
                       )
                     : const Text(
                         'Submit Listing',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
               ),
             ),
@@ -459,17 +474,24 @@ class _AddListingScreenState extends State<AddListingScreen> {
 
     try {
       // Get current user ID from auth
-      final user = _authService.getCurrentUser();
-      if (user == null) {
-        _showSnackbar('You must be logged in to create a listing', isError: true);
+      final authUser = _authService.getCurrentUser();
+      if (authUser == null || authUser.email == null) {
+        _showSnackbar(
+          'You must be logged in to create a listing',
+          isError: true,
+        );
         setState(() => _isSubmitting = false);
         return;
       }
 
-      // Parse user ID - Supabase auth user IDs are UUIDs (strings)
-      // We need to get the database user ID from the users table
-      // For now, we'll use a placeholder - you should fetch the actual user ID from your users table
-      final userId = 1; // TODO: Get actual user ID from users table by email
+      // Get the database user ID from the users table by email
+      final dbUser = await _userService.getUserByEmail(authUser.email!);
+      if (dbUser == null || dbUser.userId == null) {
+        _showSnackbar('User not found in database', isError: true);
+        setState(() => _isSubmitting = false);
+        return;
+      }
+      final userId = dbUser.userId!;
 
       // Parse price
       int? price;
@@ -491,11 +513,11 @@ class _AddListingScreenState extends State<AddListingScreen> {
         price: price,
         userId: userId,
         status: true,
-        imageUrl: _imageUrlController.text.trim().isEmpty 
-            ? null 
+        imageUrl: _imageUrlController.text.trim().isEmpty
+            ? null
             : _imageUrlController.text.trim(),
-        platform: _platformController.text.trim().isEmpty 
-            ? null 
+        platform: _platformController.text.trim().isEmpty
+            ? null
             : _platformController.text.trim(),
       );
 
@@ -537,7 +559,10 @@ class _AddListingScreenState extends State<AddListingScreen> {
           }
         }
       } else {
-        _showSnackbar('Failed to create listing. Please try again.', isError: true);
+        _showSnackbar(
+          'Failed to create listing. Please try again.',
+          isError: true,
+        );
       }
     } catch (e) {
       _showSnackbar('Error: ${e.toString()}', isError: true);
