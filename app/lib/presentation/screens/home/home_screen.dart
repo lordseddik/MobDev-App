@@ -492,7 +492,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildEditButton(ItemModel item) {
     return GestureDetector(
       onTap: () async {
-        final result = await Navigator.push(
+        await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => EditItemScreen(
@@ -512,8 +512,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
 
-        if (result != null) {
-          _loadItems();
+        // Always reload items from database after editing
+        if (mounted) {
+          await _loadItems();
+          await _loadFavorites();
         }
       },
       child: Container(
@@ -668,7 +670,14 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: (index) {
+          setState(() => _currentIndex = index);
+          // Refresh data when Home tab is tapped
+          if (index == 0) {
+            _loadItems();
+            _loadFavorites();
+          }
+        },
         backgroundColor: Colors.transparent,
         selectedItemColor: const Color(0xFF9C4DFF),
         unselectedItemColor: Colors.grey,

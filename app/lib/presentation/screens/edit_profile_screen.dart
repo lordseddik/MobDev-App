@@ -1,6 +1,9 @@
 // FILE: lib/presentation/screens/edit_profile_screen.dart
 
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/datasources/auth_service.dart';
 import '../../data/datasources/user_service.dart';
 import '../../data/models/user_model.dart';
@@ -16,14 +19,19 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final AuthService _authService = AuthService();
   final UserService _userService = UserService();
-  
+  final ImagePicker _imagePicker = ImagePicker();
+
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
-  
+  final TextEditingController _imageUrlController = TextEditingController();
+
   UserModel? _currentUser;
+  String? _previewImageUrl;
+  File? _selectedImageFile;
   bool _isLoading = true;
   bool _isSaving = false;
+  bool _isUploadingImage = false;
 
   @override
   void initState() {
@@ -36,12 +44,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _usernameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _imageUrlController.dispose();
     super.dispose();
   }
 
   Future<void> _loadUserProfile() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final authUser = _authService.getCurrentUser();
       if (authUser != null) {
@@ -52,6 +61,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             _usernameController.text = dbUser.userName;
             _emailController.text = dbUser.email;
             _phoneController.text = dbUser.phoneNum?.toString() ?? '';
+            _imageUrlController.text = dbUser.imageUrl ?? '';
+            _previewImageUrl = dbUser.imageUrl;
           });
         }
       }
@@ -64,9 +75,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Future<void> _saveChanges() async {
     if (_currentUser == null) return;
-    
+
     setState(() => _isSaving = true);
-    
+
     try {
       // Validate
       if (_usernameController.text.trim().isEmpty) {
@@ -74,23 +85,35 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         setState(() => _isSaving = false);
         return;
       }
-      
+
       // Prepare updates
       Map<String, dynamic> updates = {
         'username': _usernameController.text.trim(),
         'email': _emailController.text.trim(),
       };
-      
+
       if (_phoneController.text.trim().isNotEmpty) {
         final phone = int.tryParse(_phoneController.text.trim());
         if (phone != null) {
           updates['phonenum'] = phone;
         }
       }
-      
+
+      // Upload image if a file is selected, otherwise use URL
+      String? imageUrl;
+      if (_selectedImageFile != null) {
+        imageUrl = await _uploadImageToSupabase();
+      } else if (_previewImageUrl != null && _previewImageUrl!.isNotEmpty) {
+        imageUrl = _previewImageUrl;
+      }
+      updates['imageurl'] = imageUrl;
+
       // Update in database
-      final success = await _userService.updateUser(_currentUser!.userId!, updates);
-      
+      final success = await _userService.updateUser(
+        _currentUser!.userId!,
+        updates,
+      );
+
       if (success) {
         _showSnackbar('Profile updated successfully!', isError: false);
         await _loadUserProfile(); // Reload to confirm changes
@@ -109,10 +132,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Colors.grey[900],
-        title: const Text(
-          'Sign Out',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('Sign Out', style: TextStyle(color: Colors.white)),
         content: const Text(
           'Are you sure you want to sign out?',
           style: TextStyle(color: Colors.grey),
@@ -124,13 +144,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: const Color(0xFF9C4DFF)),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF9C4DFF),
+            ),
             child: const Text('Sign Out'),
           ),
         ],
       ),
     );
-    
+
     if (confirmed == true) {
       await _authService.signOut();
       if (mounted) {
@@ -169,13 +191,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ],
       ),
     );
-    
+
     if (confirmed == true && _currentUser != null) {
       // Delete from database
       await _userService.deleteUser(_currentUser!.userId!);
       // Delete auth user
       await _authService.signOut();
-      
+
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
@@ -184,6 +206,236 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         );
       }
     }
+  }
+
+  void _showImageUrlDialog() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.grey[900],
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Change Profile Photo',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Take Photo option
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF9C4DFF).withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.camera_alt, color: Color(0xFF9C4DFF)),
+                ),
+                title: const Text(
+                  'Take Photo',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+              // Choose from Gallery option
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF9C4DFF).withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.photo_library,
+                    color: Color(0xFF9C4DFF),
+                  ),
+                ),
+                title: const Text(
+                  'Choose from Gallery',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickImage(ImageSource.gallery);
+                },
+              ),
+              // Enter URL option
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF9C4DFF).withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.link, color: Color(0xFF9C4DFF)),
+                ),
+                title: const Text(
+                  'Enter Image URL',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showUrlInputDialog();
+                },
+              ),
+              // Remove photo option (if there's a photo)
+              if (_previewImageUrl != null || _selectedImageFile != null)
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.delete, color: Colors.red),
+                  ),
+                  title: const Text(
+                    'Remove Photo',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    setState(() {
+                      _previewImageUrl = null;
+                      _selectedImageFile = null;
+                      _imageUrlController.clear();
+                    });
+                  },
+                ),
+              const SizedBox(height: 10),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final XFile? pickedFile = await _imagePicker.pickImage(
+        source: source,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 75,
+      );
+
+      if (pickedFile != null) {
+        setState(() {
+          _selectedImageFile = File(pickedFile.path);
+          _previewImageUrl = null; // Clear URL preview when file is selected
+        });
+      }
+    } catch (e) {
+      _showSnackbar('Error picking image: $e', isError: true);
+    }
+  }
+
+  Future<String?> _uploadImageToSupabase() async {
+    if (_selectedImageFile == null) return _previewImageUrl;
+
+    setState(() => _isUploadingImage = true);
+
+    try {
+      final fileName =
+          'profile_${_currentUser!.userId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final bytes = await _selectedImageFile!.readAsBytes();
+
+      await Supabase.instance.client.storage
+          .from('profile-images')
+          .uploadBinary(
+            fileName,
+            bytes,
+            fileOptions: const FileOptions(
+              contentType: 'image/jpeg',
+              upsert: true,
+            ),
+          );
+
+      final imageUrl = Supabase.instance.client.storage
+          .from('profile-images')
+          .getPublicUrl(fileName);
+
+      return imageUrl;
+    } catch (e) {
+      print('Error uploading image: $e');
+      _showSnackbar(
+        'Error uploading image. Using URL if provided.',
+        isError: true,
+      );
+      return _imageUrlController.text.isNotEmpty
+          ? _imageUrlController.text
+          : null;
+    } finally {
+      setState(() => _isUploadingImage = false);
+    }
+  }
+
+  void _showUrlInputDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: const Text(
+          'Enter Image URL',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _imageUrlController,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: 'https://example.com/image.jpg',
+                hintStyle: const TextStyle(color: Colors.grey),
+                filled: true,
+                fillColor: Colors.grey[800],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              _imageUrlController.text = _previewImageUrl ?? '';
+              Navigator.pop(ctx);
+            },
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _previewImageUrl = _imageUrlController.text.trim().isEmpty
+                    ? null
+                    : _imageUrlController.text.trim();
+                _selectedImageFile = null; // Clear file when URL is set
+              });
+              Navigator.pop(ctx);
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFF9C4DFF),
+            ),
+            child: const Text('Apply'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showSnackbar(String message, {required bool isError}) {
@@ -239,40 +491,83 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             Center(
               child: Column(
                 children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xFF9C4DFF),
-                    ),
-                    child: _currentUser?.imageUrl != null
-                        ? ClipOval(
-                            child: Image.network(
-                              _currentUser!.imageUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return const Icon(
+                  GestureDetector(
+                    onTap: _showImageUrlDialog,
+                    child: Stack(
+                      children: [
+                        Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(0xFF9C4DFF),
+                          ),
+                          child: _selectedImageFile != null
+                              ? ClipOval(
+                                  child: Image.file(
+                                    _selectedImageFile!,
+                                    fit: BoxFit.cover,
+                                    width: 100,
+                                    height: 100,
+                                  ),
+                                )
+                              : _previewImageUrl != null &&
+                                    _previewImageUrl!.isNotEmpty
+                              ? ClipOval(
+                                  child: Image.network(
+                                    _previewImageUrl!,
+                                    fit: BoxFit.cover,
+                                    width: 100,
+                                    height: 100,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return const Icon(
+                                        Icons.person,
+                                        size: 60,
+                                        color: Colors.white,
+                                      );
+                                    },
+                                  ),
+                                )
+                              : const Icon(
                                   Icons.person,
                                   size: 60,
                                   color: Colors.white,
-                                );
-                              },
+                                ),
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[800],
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.black, width: 2),
                             ),
-                          )
-                        : const Icon(
-                            Icons.person,
-                            size: 60,
-                            color: Colors.white,
+                            child: const Icon(
+                              Icons.camera_alt,
+                              size: 16,
+                              color: Colors.white,
+                            ),
                           ),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 10),
+                  TextButton(
+                    onPressed: _showImageUrlDialog,
+                    child: const Text(
+                      'Change Photo',
+                      style: TextStyle(
+                        color: Color(0xFF9C4DFF),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                   Text(
                     _currentUser?.email ?? 'No email',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                 ],
               ),
@@ -390,7 +685,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       onPressed: _isSaving ? null : _saveChanges,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF9C4DFF),
-                        disabledBackgroundColor: const Color(0xFF9C4DFF).withOpacity(0.5),
+                        disabledBackgroundColor: const Color(
+                          0xFF9C4DFF,
+                        ).withOpacity(0.5),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),

@@ -6,11 +6,7 @@ class EditItemScreen extends StatefulWidget {
   final ItemModel item;
   final void Function(ItemModel updated)? onItemUpdated;
 
-  const EditItemScreen({
-    super.key,
-    required this.item,
-    this.onItemUpdated,
-  });
+  const EditItemScreen({super.key, required this.item, this.onItemUpdated});
 
   @override
   State<EditItemScreen> createState() => _EditItemScreenState();
@@ -22,7 +18,8 @@ class _EditItemScreenState extends State<EditItemScreen> {
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   String _selectedCategory = 'Games';
-  String _selectedListingType = 'Sell'; // NEW: Separate variable for listing type
+  String _selectedListingType =
+      'Sell'; // NEW: Separate variable for listing type
 
   @override
   void initState() {
@@ -35,8 +32,8 @@ class _EditItemScreenState extends State<EditItemScreen> {
     _selectedListingType = (widget.item.type ?? 'sell').toLowerCase() == 'rent'
         ? 'Rent'
         : (widget.item.type ?? 'sell').toLowerCase() == 'trade'
-            ? 'Trade'
-            : 'Sell';
+        ? 'Trade'
+        : 'Sell';
   }
 
   @override
@@ -96,7 +93,9 @@ class _EditItemScreenState extends State<EditItemScreen> {
                     decoration: BoxDecoration(
                       color: Colors.grey[900],
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey[800] ?? Colors.grey),
+                      border: Border.all(
+                        color: Colors.grey[800] ?? Colors.grey,
+                      ),
                     ),
                     child: const Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -135,7 +134,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Title Field
                   const Text(
                     'Title',
@@ -161,7 +160,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Description Field
                   const Text(
                     'Description',
@@ -212,7 +211,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Category Dropdown
                   const Text(
                     'Category',
@@ -240,10 +239,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
                         contentPadding: EdgeInsets.symmetric(horizontal: 16),
                       ),
                       items: const [
-                        DropdownMenuItem(
-                          value: 'Games',
-                          child: Text('Games'),
-                        ),
+                        DropdownMenuItem(value: 'Games', child: Text('Games')),
                         DropdownMenuItem(
                           value: 'Consoles',
                           child: Text('Consoles'),
@@ -252,10 +248,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
                           value: 'Accessories',
                           child: Text('Accessories'),
                         ),
-                        DropdownMenuItem(
-                          value: 'Other',
-                          child: Text('Other'),
-                        ),
+                        DropdownMenuItem(value: 'Other', child: Text('Other')),
                       ],
                       onChanged: (String? newValue) {
                         setState(() {
@@ -265,7 +258,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Price Field
                   const Text(
                     'Price',
@@ -320,7 +313,9 @@ class _EditItemScreenState extends State<EditItemScreen> {
                   const SizedBox(height: 12),
                   Container(
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[800] ?? Colors.grey),
+                      border: Border.all(
+                        color: Colors.grey[800] ?? Colors.grey,
+                      ),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
@@ -409,7 +404,11 @@ class _EditItemScreenState extends State<EditItemScreen> {
     // Remove nulls to avoid overwriting
     updates.removeWhere((key, value) => value == null);
 
+    print('Saving changes for item ${widget.item.itemId}: $updates'); // Debug
+
     final ok = await _itemService.updateItem(widget.item.itemId!, updates);
+    print('Update result: $ok'); // Debug
+
     if (ok) {
       final updated = ItemModel(
         itemId: widget.item.itemId,
@@ -426,14 +425,14 @@ class _EditItemScreenState extends State<EditItemScreen> {
       );
 
       widget.onItemUpdated?.call(updated);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Item updated')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Item updated')));
       Navigator.pop(context, updated);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to update item')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to update item')));
     }
   }
 
@@ -453,9 +452,9 @@ class _EditItemScreenState extends State<EditItemScreen> {
               Navigator.pop(ctx);
               final ok = await _itemService.deleteItem(widget.item.itemId!);
               if (ok) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Item deleted')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('Item deleted')));
                 Navigator.pop(context, true);
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -469,6 +468,4 @@ class _EditItemScreenState extends State<EditItemScreen> {
       ),
     );
   }
-
-  
 }

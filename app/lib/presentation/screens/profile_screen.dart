@@ -9,6 +9,7 @@ import '../../data/datasources/favorite_service.dart';
 import '../../data/models/user_model.dart';
 import 'edit_profile_screen.dart';
 import 'home/product_page_screen.dart';
+import 'item/edit_item_screen.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 
@@ -275,7 +276,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           crossAxisSpacing: 20,
           childAspectRatio: 0.72,
         ),
-        itemBuilder: (ctx, i) => _buildItemCard(_myListings[i]),
+        itemBuilder: (ctx, i) => _buildMyListingCard(_myListings[i]),
       ),
     );
   }
@@ -344,6 +345,276 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
+  Widget _buildMyListingCard(ItemModel item) {
+    return GestureDetector(
+      onTap: () => _showListingOptions(item),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildItemImage(item),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    _buildPriceTag(item),
+                    const Spacer(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildTypeBadge(item.type ?? AppStrings.sell),
+                        Row(
+                          children: [
+                            _buildEditButton(item),
+                            const SizedBox(width: 4),
+                            _buildDeleteButton(item),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showListingOptions(ItemModel item) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.grey[900],
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                item.title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 20),
+              // View Details
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.visibility, color: AppColors.primary),
+                ),
+                title: const Text(
+                  'View Details',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => Productpage(item: item)),
+                  ).then((_) => _loadUserData());
+                },
+              ),
+              // Edit Listing
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.edit, color: Colors.blue),
+                ),
+                title: const Text(
+                  'Edit Listing',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _editListing(item);
+                },
+              ),
+              // Delete Listing
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.delete, color: Colors.red),
+                ),
+                title: const Text(
+                  'Delete Listing',
+                  style: TextStyle(color: Colors.red),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _confirmDeleteListing(item);
+                },
+              ),
+              const SizedBox(height: 10),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _editListing(ItemModel item) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EditItemScreen(
+          item: item,
+          onItemUpdated: (updatedItem) {
+            // This callback updates local state immediately
+            final index = _myListings.indexWhere(
+              (i) => i.itemId == updatedItem.itemId,
+            );
+            if (index != -1) {
+              setState(() {
+                _myListings[index] = updatedItem;
+              });
+            }
+          },
+        ),
+      ),
+    );
+
+    // Always reload from database to ensure we have fresh data
+    if (mounted) {
+      await _loadUserData();
+    }
+  }
+
+  Future<void> _confirmDeleteListing(ItemModel item) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: const Text(
+          'Delete Listing',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          'Are you sure you want to delete "${item.title}"? This action cannot be undone.',
+          style: const TextStyle(color: Colors.grey),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && item.itemId != null) {
+      try {
+        final success = await _itemService.deleteItem(item.itemId!);
+        if (success) {
+          setState(() {
+            _myListings.removeWhere((i) => i.itemId == item.itemId);
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Listing deleted successfully'),
+                backgroundColor: Colors.green,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Failed to delete listing'),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        print('Error deleting listing: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Widget _buildEditButton(ItemModel item) {
+    return GestureDetector(
+      onTap: () => _editListing(item),
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: Colors.blue.withOpacity(0.2),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.edit, color: Colors.blue, size: 16),
+      ),
+    );
+  }
+
+  Widget _buildDeleteButton(ItemModel item) {
+    return GestureDetector(
+      onTap: () => _confirmDeleteListing(item),
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: Colors.red.withOpacity(0.2),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.delete, color: Colors.red, size: 16),
+      ),
+    );
+  }
+
   Widget _buildFavoriteItemCard(ItemModel item) {
     return GestureDetector(
       onTap: () {
@@ -407,53 +678,6 @@ class _ProfileScreenState extends State<ProfileScreen>
           shape: BoxShape.circle,
         ),
         child: const Icon(Icons.favorite, color: Colors.red, size: 18),
-      ),
-    );
-  }
-
-  Widget _buildItemCard(ItemModel item) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => Productpage(item: item)),
-        ).then((_) => _loadUserData()); // Reload after viewing
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildItemImage(item),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    _buildPriceTag(item),
-                    const Spacer(),
-                    _buildTypeBadge(item.type ?? AppStrings.sell),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

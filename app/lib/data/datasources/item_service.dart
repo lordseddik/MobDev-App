@@ -135,8 +135,13 @@ class ItemService {
   // UPDATE - Update item
   Future<bool> updateItem(int itemId, Map<String, dynamic> updates) async {
     try {
-      await _supabase.from('items').update(updates).eq('itemid', itemId);
-
+      print('Updating item $itemId with: $updates'); // Debug
+      final response = await _supabase
+          .from('items')
+          .update(updates)
+          .eq('itemid', itemId)
+          .select();
+      print('Update response: $response'); // Debug
       return true;
     } catch (e) {
       print('Error updating item: $e');
