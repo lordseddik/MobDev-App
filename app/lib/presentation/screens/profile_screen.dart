@@ -318,7 +318,95 @@ class _ProfileScreenState extends State<ProfileScreen>
           crossAxisSpacing: 20,
           childAspectRatio: 0.72,
         ),
-        itemBuilder: (ctx, i) => _buildItemCard(_myFavorites[i]),
+        itemBuilder: (ctx, i) => _buildFavoriteItemCard(_myFavorites[i]),
+      ),
+    );
+  }
+
+  Future<void> _toggleFavorite(int itemId) async {
+    if (_currentUser?.userId == null) return;
+
+    try {
+      await _favoriteService.toggleFavorite(_currentUser!.userId!, itemId);
+      // Reload favorites after toggling
+      await _loadUserData();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Removed from favorites'),
+            duration: Duration(seconds: 1),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error toggling favorite: $e');
+    }
+  }
+
+  Widget _buildFavoriteItemCard(ItemModel item) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => Productpage(item: item)),
+        ).then((_) => _loadUserData());
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildItemImage(item),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    _buildPriceTag(item),
+                    const Spacer(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildTypeBadge(item.type ?? AppStrings.sell),
+                        _buildUnfavoriteButton(item.itemId!),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUnfavoriteButton(int itemId) {
+    return GestureDetector(
+      onTap: () => _toggleFavorite(itemId),
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.1),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.favorite, color: Colors.red, size: 18),
       ),
     );
   }

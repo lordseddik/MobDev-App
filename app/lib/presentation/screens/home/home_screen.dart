@@ -33,6 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<ItemModel> _displayedItems = [];
   bool _isLoading = true;
   int? _currentUserId;
+  Set<int> _favoritedItemIds = {};
 
   final TextEditingController _searchController = TextEditingController();
 
@@ -66,10 +67,28 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() {
             _currentUserId = dbUser.userId;
           });
+          await _loadFavorites();
         }
       }
     } catch (e) {
       print('Error getting user ID: $e');
+    }
+  }
+
+  Future<void> _loadFavorites() async {
+    if (_currentUserId == null) return;
+    try {
+      final favorites = await _favoriteService.getUserFavorites(
+        _currentUserId!,
+      );
+      setState(() {
+        _favoritedItemIds = favorites
+            .where((item) => item.itemId != null)
+            .map((item) => item.itemId!)
+            .toSet();
+      });
+    } catch (e) {
+      print('Error loading favorites: $e');
     }
   }
 
@@ -148,13 +167,24 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     try {
+      final wasInFavorites = _favoritedItemIds.contains(itemId);
       await _favoriteService.toggleFavorite(_currentUserId!, itemId);
+
+      setState(() {
+        if (wasInFavorites) {
+          _favoritedItemIds.remove(itemId);
+        } else {
+          _favoritedItemIds.add(itemId);
+        }
+      });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Favorite updated'),
-            duration: Duration(seconds: 1),
+          SnackBar(
+            content: Text(
+              wasInFavorites ? 'Removed from favorites' : 'Added to favorites',
+            ),
+            duration: const Duration(seconds: 1),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -612,6 +642,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildFavoriteButton(int itemId) {
+    final isFavorited = _favoritedItemIds.contains(itemId);
     return GestureDetector(
       onTap: () => _toggleFavorite(itemId),
       child: Container(
@@ -620,7 +651,11 @@ class _HomeScreenState extends State<HomeScreen> {
           color: Colors.white.withOpacity(0.1),
           shape: BoxShape.circle,
         ),
-        child: const Icon(Icons.favorite_border, color: Colors.white, size: 18),
+        child: Icon(
+          isFavorited ? Icons.favorite : Icons.favorite_border,
+          color: isFavorited ? Colors.red : Colors.white,
+          size: 18,
+        ),
       ),
     );
   }
