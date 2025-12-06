@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'presentation/screens/auth/login_screen.dart';
+import 'presentation/screens/home/home_screen.dart';
 import 'presentation/screens/splash_screen.dart';
 
 void main() async {
-  //supabase setup
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
 
@@ -13,18 +14,25 @@ void main() async {
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
 
-  runApp(const MyApp());
+  // Check if a session exists
+  final session = Supabase.instance.client.auth.currentSession;
+
+  runApp(MyApp(initialSession: session));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final Session? initialSession;
+
+  const MyApp({super.key, this.initialSession});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Marketplace App',
       theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
-      home: SplashScreen(),
+      home: initialSession != null
+          ? const HomeScreen() // User is logged in
+          : const LoginScreen(), // User needs to log in
     );
   }
 }
