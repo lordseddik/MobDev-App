@@ -31,6 +31,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   File? _selectedImageFile;
   bool _isLoading = true;
   bool _isSaving = false;
+  // ignore: unused_field
   bool _isUploadingImage = false;
 
   @override
