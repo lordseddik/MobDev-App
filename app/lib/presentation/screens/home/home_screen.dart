@@ -38,11 +38,11 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   final List<String> _categories = [
+    AppStrings.all,
     AppStrings.games,
     AppStrings.consoles,
     AppStrings.accessories,
     AppStrings.electronics,
-    AppStrings.all,
   ];
 
   @override
@@ -117,8 +117,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _filterItems() {
     setState(() {
-      if (_activeCategoryIndex == _categories.length - 1) {
-        // "All" category
+      if (_activeCategoryIndex == 0) {
+        // "All" category (first in list)
         _displayedItems = _allItems;
       } else {
         final category = _categories[_activeCategoryIndex];
